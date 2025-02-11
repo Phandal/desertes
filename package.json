@@ -1,0 +1,20 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ace-code": "^1.37.5"
+  },
+  "devDependencies": {
+    "@types/ace": "^0.0.52",
+    "ace-linters": "^1.4.1"
+  }
+}
