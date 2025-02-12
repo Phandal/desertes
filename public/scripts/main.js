@@ -171,17 +171,22 @@ inputEditor.setValue(ExampleJobInput);
 
 const translateButton = /** @type {HTMLButtonElement} */(document.getElementById('translate'));
 translateButton.addEventListener('click', async () => {
-  const template = JSON.parse(templateEditor.getValue() || "{}")
-  const job = JSON.parse(inputEditor.getValue() || "{}");
+  try {
+    const template = JSON.parse(templateEditor.getValue() || "{}")
+    const job = JSON.parse(inputEditor.getValue() || "{}");
 
-  const input = {
-    members: job.data || [],
-    referenceIdentifier: job.documentNumber || 1,
-  };
+    const input = {
+      members: job.data || [],
+      referenceIdentifier: job.documentNumber || 1,
+    };
 
-  const response = await fetch('/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template, input }) })
-  const body = await response.text();
-  outputEditor.setValue(body);
+    const response = await fetch('/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template, input }) })
+    const body = await response.text();
+    outputEditor.setValue(body);
+  } catch (err) {
+    const message = (err instanceof Error) ? err.message : 'unexpected client side error';
+    outputEditor.setValue(message);
+  }
 });
 
 const saveButton = /** @type {HTMLButtonElement} */(document.getElementById('save'));
