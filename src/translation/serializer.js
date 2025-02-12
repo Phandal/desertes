@@ -7,7 +7,6 @@ exports.X12Serializer = void 0;
 const handlebars_1 = __importDefault(require("handlebars"));
 const date_fns_1 = require("date-fns");
 const stream_1 = require("stream");
-const logger_js_1 = require("#util/logger.js");
 const NoOpFilter = (_input) => { return 'true'; };
 class X12Serializer {
     input;
@@ -15,7 +14,6 @@ class X12Serializer {
     constructor(input, template) {
         this.input = input;
         this.template = template;
-        this.setupLogger();
         this.registerHelpers();
     }
     async serialize() {
@@ -161,10 +159,6 @@ class X12Serializer {
             }
             return result;
         };
-    }
-    setupLogger() {
-        const logger = new logger_js_1.Logger(process.stdout, 'DEBUG');
-        handlebars_1.default.logger.log = (_level, obj) => logger.debug({ msg: `Handlebars Log: ${obj}` });
     }
     registerHelpers() {
         handlebars_1.default.registerHelper('dateFormat', function (format, input) {

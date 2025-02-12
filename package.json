@@ -4,17 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "node src/app.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "ace-code": "^1.37.5"
+    "@types/node": "^22.13.1",
+    "ace-code": "^1.37.5",
+    "ajv": "^8.17.1",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "express": "^4.21.2",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/ace": "^0.0.52",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
     "ace-linters": "^1.4.1"
   }
 }

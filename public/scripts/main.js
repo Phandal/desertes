@@ -33,7 +33,7 @@ function makeEditor(id, options) {
   * @param {MakeEditorOptions} options - options for the created Editor
   * @returns {AceAjax.Editor}
   */
-function makeLSPEditor(id, options = { readonly: false, mode: 'ace/mode/json' }) {
+function makeLSPEditor(id, options) {
   const editor = makeEditor(id, options);
 
   // Enable autocompletion
@@ -50,24 +50,37 @@ function makeLSPEditor(id, options = { readonly: false, mode: 'ace/mode/json' })
   return editor;
 }
 
-const templateEditor = makeLSPEditor('template-editor', { mode: 'ace/mode/json' });
-const inputEditor = makeEditor('input-editor', { mode: 'ace/mode/json' });
-const outputEditor = makeEditor('output-editor', { readonly: true });
+const templateEditor = makeLSPEditor('template-editor', {});
+const inputEditor = makeEditor('input-editor', {});
+const outputEditor = makeEditor('output-editor', { readonly: true, mode: 'ace/mode/text' });
 
 templateEditor.setValue(JSON.stringify({ "$schema": "http://localhost:3000/template" }, null, 2));
 
-const button = /** @type {HTMLButtonElement} */(document.getElementById('translate'));
-button.addEventListener('click', async () => {
+const translateButton = /** @type {HTMLButtonElement} */(document.getElementById('translate'));
+translateButton.addEventListener('click', async () => {
   const template = JSON.parse(templateEditor.getValue() || "{}")
   const job = JSON.parse(inputEditor.getValue() || "{}");
 
   const input = {
-    members: job.members || [],
+    members: job.data || [],
     referenceIdentifier: job.referenceIdentifier || 1,
   };
 
-  outputEditor.setValue(JSON.stringify({ template, input }, null, 2));
+  const response = await fetch('/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template, input }) })
+  const body = await response.text();
+  outputEditor.setValue(body);
 });
+
+const saveButton = /** @type {HTMLButtonElement} */(document.getElementById('save'));
+saveButton.addEventListener('click', () => {
+  const templateBlob = new Blob([templateEditor.getValue()], { type: 'application/json' });
+  const url = (URL.createObjectURL(templateBlob));
+
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'template.json')
+  link.click();
+})
 
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
