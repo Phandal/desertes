@@ -9,6 +9,11 @@
       "description": "where the schema file can be found",
       "type": "string"
     },
+    "name": {
+      "description": "Name of the template",
+      "type": "string",
+      "minLength": 1
+    },
     "elementSeparator": {
       "description": "Seperator between elements",
       "type": "string"
