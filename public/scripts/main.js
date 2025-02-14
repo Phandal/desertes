@@ -4,6 +4,8 @@
   * @prop {string} [mode]
   */
 
+let Filename = 'new_template.json';
+
 const BaseTemplate = `
 {
   "$schema": "http://localhost:3000/template"
@@ -189,17 +191,6 @@ translateButton.addEventListener('click', async () => {
   }
 });
 
-const saveButton = /** @type {HTMLButtonElement} */(document.getElementById('save'));
-saveButton.addEventListener('click', () => {
-  const templateBlob = new Blob([templateEditor.getValue()], { type: 'application/json' });
-  const url = (URL.createObjectURL(templateBlob));
-
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'template.json')
-  link.click();
-});
-
 const switchEditMethodButton = /** @type {HTMLButtonElement} */(document.getElementById('switch'));
 switchEditMethodButton.addEventListener('click', () => {
   editableEditors.forEach((editor) => {
@@ -215,6 +206,41 @@ switchEditMethodButton.addEventListener('click', () => {
 const clearButton = /** @type {HTMLButtonElement} */(document.getElementById('clear'));
 clearButton.addEventListener('click', () => {
   outputEditor.setValue('');
+});
+
+const saveButton = /** @type {HTMLButtonElement} */(document.getElementById('save'));
+saveButton.addEventListener('click', () => {
+  const templateBlob = new Blob([templateEditor.getValue()], { type: 'application/json' });
+  const url = (URL.createObjectURL(templateBlob));
+
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', Filename);
+  link.click();
+});
+
+const fileInput = /** @type {HTMLInputElement} */(document.getElementById('load_file'));
+fileInput.addEventListener('change', (e) => {
+  const files = /** @type {HTMLInputElement} */(e.target).files;
+  if (!files || files.length === 0) return;
+
+  const file = files[0];
+  Filename = file.name;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    if (!e.target) return;
+    const fileContent = e.target.result || '';
+
+    templateEditor.setValue(fileContent.toString());
+  }
+
+  reader.onerror = (e) => {
+    outputEditor.setValue(`Error reading file: ${e}`);
+  }
+
+  reader.readAsText(file);
 });
 
 window.addEventListener('beforeunload', function(e) {

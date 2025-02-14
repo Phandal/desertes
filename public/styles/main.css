@@ -2,6 +2,7 @@
   grid-area: toolbar;
   display: flex;
   justify-content: center;
+  gap: 1vw;
 }
 
 #template-editor {
