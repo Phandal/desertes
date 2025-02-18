@@ -6,11 +6,11 @@
 
 let Filename = 'new_template.json';
 
-const BaseTemplate = `
-{
-  "$schema": "http://localhost:3000/template"
-}
-`;
+const BaseTemplate =
+  `{
+  "$schema": "https://storageukgreadyedi.blob.core.windows.net/schema-files/template.json"
+}`;
+
 const ExampleJobInput =
   `{
   "documentNumber": 3,
