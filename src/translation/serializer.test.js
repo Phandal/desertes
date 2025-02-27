@@ -29,10 +29,12 @@ const input = {
         {
             lastname: 'lastname1',
             firstname: 'firstname1',
+            'nick names': ['nick11', 'nick12', 'nick13'],
         },
         {
             lastname: 'lastname2',
             firstname: 'firstname2',
+            'nick names': ['nick21', 'nick22', 'nick23'],
         },
     ],
 };
@@ -162,9 +164,7 @@ const input = {
         ];
         for (let ii = 0; ii < templates.length; ++ii) {
             const template = templates[ii];
-            const serializer = new serializer_js_1.X12Serializer(input, template);
-            const stream = await serializer.serialize();
-            const got = await readStream(stream);
+            const got = await serialize(template, input);
             const want = wants[ii];
             node_assert_1.default.deepEqual(got, want);
         }
@@ -218,9 +218,7 @@ const input = {
             ],
         };
         const want = `firstname~firstname~`;
-        const serializer = new serializer_js_1.X12Serializer(input, template);
-        const stream = await serializer.serialize();
-        const got = await readStream(stream);
+        const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });
     (0, node_test_1.it)('filter segment property', async () => {
@@ -262,9 +260,7 @@ const input = {
             ],
         };
         const want = `1~2~`;
-        const serializer = new serializer_js_1.X12Serializer(input, template);
-        const stream = await serializer.serialize();
-        const got = await readStream(stream);
+        const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });
     (0, node_test_1.it)('match helper', async () => {
@@ -300,9 +296,7 @@ const input = {
             ],
         };
         const want = 'firstname**firstname~';
-        const serizlizer = new serializer_js_1.X12Serializer(input, template);
-        const stream = await serizlizer.serialize();
-        const got = await readStream(stream);
+        const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });
     (0, node_test_1.it)('matchArray helper', async () => {
@@ -333,9 +327,7 @@ const input = {
             ],
         };
         const want = 'nick1*~';
-        const serizlizer = new serializer_js_1.X12Serializer(input, template);
-        const stream = await serizlizer.serialize();
-        const got = await readStream(stream);
+        const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });
     (0, node_test_1.it)('length helper', async () => {
@@ -366,9 +358,7 @@ const input = {
             ],
         };
         const want = '9*1~';
-        const serializer = new serializer_js_1.X12Serializer(input, template);
-        const stream = await serializer.serialize();
-        const got = await readStream(stream);
+        const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });
     (0, node_test_1.it)('segment count', async () => {
@@ -498,6 +488,405 @@ const input = {
             ],
         };
         const want = 'open~firstname1*lastname1~firstname2*lastname2~close*2~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('repetition property', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: ':',
+            repetitionSeparator: '!',
+            rules: [
+                {
+                    name: 'first_segment',
+                    container: false,
+                    repetition: {
+                        property: 'members',
+                    },
+                    elements: [
+                        {
+                            name: 'first_name',
+                            value: '{{firstname}}',
+                        },
+                    ],
+                    children: [],
+                },
+            ],
+        };
+        const want = 'firstname1~firstname2~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('repetition property with filter', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: ':',
+            repetitionSeparator: '!',
+            rules: [
+                {
+                    name: 'first_segment',
+                    container: false,
+                    repetition: {
+                        property: 'members',
+                        filter: `{{#compare firstname '==' 'firstname1'}}true{{/compare}}`,
+                    },
+                    elements: [
+                        {
+                            name: 'first_name',
+                            value: '{{firstname}}',
+                        },
+                    ],
+                    children: [],
+                },
+            ],
+        };
+        const want = 'firstname1~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('repetition property recursive', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: ':',
+            repetitionSeparator: '!',
+            rules: [
+                {
+                    name: 'first_segment',
+                    container: false,
+                    repetition: {
+                        property: 'members',
+                    },
+                    elements: [
+                        {
+                            name: 'first_name',
+                            value: '{{firstname}}',
+                        },
+                    ],
+                    children: [
+                        {
+                            name: 'recursive_segment',
+                            container: false,
+                            repetition: {
+                                property: 'nick names',
+                            },
+                            elements: [
+                                {
+                                    name: 'nickname',
+                                    value: '{{this}}',
+                                },
+                            ],
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        const want = 'firstname1~nick11~nick12~nick13~firstname2~nick21~nick22~nick23~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('repetition property recursive with filter', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: ':',
+            repetitionSeparator: '!',
+            rules: [
+                {
+                    name: 'first_segment',
+                    container: false,
+                    repetition: {
+                        property: 'members',
+                    },
+                    elements: [
+                        {
+                            name: 'first_name',
+                            value: '{{firstname}}',
+                        },
+                    ],
+                    children: [
+                        {
+                            name: 'recursive_segment',
+                            container: false,
+                            repetition: {
+                                property: 'nick names',
+                                filter: `{{#compare this '==' 'nick11'}}true{{/compare}}`,
+                            },
+                            elements: [
+                                {
+                                    name: 'nickname',
+                                    value: '{{this}}',
+                                },
+                            ],
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        const want = 'firstname1~nick11~firstname2~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('repetition property recursive with filters', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: ':',
+            repetitionSeparator: '!',
+            rules: [
+                {
+                    name: 'first_segment',
+                    container: false,
+                    repetition: {
+                        property: 'members',
+                        filter: `{{#compare firstname '==' 'firstname1'}}true{{/compare}}`,
+                    },
+                    elements: [
+                        {
+                            name: 'first_name',
+                            value: '{{firstname}}',
+                        },
+                    ],
+                    children: [
+                        {
+                            name: 'recursive_segment',
+                            container: false,
+                            repetition: {
+                                property: 'nick names',
+                                filter: `{{#compare this '==' 'nick11'}}true{{/compare}}`,
+                            },
+                            elements: [
+                                {
+                                    name: 'nickname',
+                                    value: '{{this}}',
+                                },
+                            ],
+                            children: [],
+                        },
+                    ],
+                },
+            ],
+        };
+        const want = 'firstname1~nick11~';
+        const got = await serialize(template, input);
+        node_assert_1.default.deepEqual(got, want);
+    });
+    (0, node_test_1.it)('trim property', async () => {
+        const template = {
+            $schema: '',
+            name: '',
+            version: '0.0.1',
+            elementSeparator: '*',
+            segmentSeparator: '~',
+            componentSeparator: '::',
+            repetitionSeparator: '!!',
+            rules: [
+                {
+                    name: 'Segment_One',
+                    container: false,
+                    trim: true,
+                    elements: [
+                        {
+                            name: 'trimmed_segment_true',
+                            value: 'header',
+                        },
+                        {
+                            name: 'element_one',
+                            value: '',
+                        },
+                        {
+                            name: 'element_two',
+                            value: '',
+                        },
+                        {
+                            name: 'element_three',
+                            value: '',
+                        },
+                    ],
+                    children: [],
+                    closeRule: {
+                        name: 'CloseSegment',
+                        trim: true,
+                        elements: [
+                            {
+                                name: 'trimmed_close_true',
+                                value: 'trailer',
+                            },
+                            {
+                                name: 'element_one',
+                                value: '',
+                            },
+                            {
+                                name: 'element_two',
+                                value: '',
+                            },
+                            {
+                                name: 'element_three',
+                                value: '',
+                            },
+                        ],
+                    },
+                },
+                {
+                    name: 'Segment_Two',
+                    container: false,
+                    trim: true,
+                    elements: [
+                        {
+                            name: 'untrimmed_segment_true',
+                            value: 'header',
+                        },
+                        {
+                            name: 'element_one',
+                            value: '',
+                        },
+                        {
+                            name: 'element_two',
+                            value: '',
+                        },
+                        {
+                            name: 'element_three',
+                            value: 'three',
+                        },
+                    ],
+                    children: [],
+                    closeRule: {
+                        name: 'CloseSegment',
+                        trim: true,
+                        elements: [
+                            {
+                                name: 'untrimmed_close_true',
+                                value: 'trailer',
+                            },
+                            {
+                                name: 'element_one',
+                                value: '',
+                            },
+                            {
+                                name: 'element_two',
+                                value: '',
+                            },
+                            {
+                                name: 'element_three',
+                                value: 'three',
+                            },
+                        ],
+                    },
+                },
+                {
+                    name: 'Segment_Three',
+                    container: false,
+                    trim: false,
+                    elements: [
+                        {
+                            name: 'untrimmed_segment_false',
+                            value: 'header',
+                        },
+                        {
+                            name: 'element_one',
+                            value: '',
+                        },
+                        {
+                            name: 'element_two',
+                            value: '',
+                        },
+                        {
+                            name: 'element_three',
+                            value: '',
+                        },
+                    ],
+                    children: [],
+                    closeRule: {
+                        name: 'CloseSegment',
+                        trim: false,
+                        elements: [
+                            {
+                                name: 'untrimmed_close_false',
+                                value: 'trailer',
+                            },
+                            {
+                                name: 'element_one',
+                                value: '',
+                            },
+                            {
+                                name: 'element_two',
+                                value: '',
+                            },
+                            {
+                                name: 'element_three',
+                                value: '',
+                            },
+                        ],
+                    },
+                },
+                {
+                    name: 'Segment_Four',
+                    container: false,
+                    trim: false,
+                    elements: [
+                        {
+                            name: 'untrimmed_segment_false',
+                            value: 'header',
+                        },
+                        {
+                            name: 'element_one',
+                            value: '',
+                        },
+                        {
+                            name: 'element_two',
+                            value: '',
+                        },
+                        {
+                            name: 'element_three',
+                            value: 'three',
+                        },
+                    ],
+                    children: [],
+                    closeRule: {
+                        name: 'CloseSegment',
+                        trim: false,
+                        elements: [
+                            {
+                                name: 'untrimmed_close_false',
+                                value: 'trailer',
+                            },
+                            {
+                                name: 'element_one',
+                                value: '',
+                            },
+                            {
+                                name: 'element_two',
+                                value: '',
+                            },
+                            {
+                                name: 'element_three',
+                                value: 'three',
+                            },
+                        ],
+                    },
+                },
+            ],
+        };
+        const want = 'header~trailer~header***three~trailer***three~header***~trailer***~header***three~trailer***three~';
         const got = await serialize(template, input);
         node_assert_1.default.deepEqual(got, want);
     });

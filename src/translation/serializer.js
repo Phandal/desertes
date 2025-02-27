@@ -55,10 +55,10 @@ class X12Serializer {
               segmentCount += this.serializeSegments(segment.children, input, stream);
             }
             else {
-              this.serializeElements(segment.elements, input, stream);
+              this.serializeElements(segment.elements, input, segment.trim, stream);
               segmentCount += this.serializeSegments(segment.children, input, stream);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
-              segmentCount += this.updateSegmentCount(segmentCount, segment);
+              segmentCount += this.updateSegmentCount(segment);
             }
           }
         }
@@ -79,10 +79,10 @@ class X12Serializer {
             segmentCount += this.serializeSegments(segment.children, new_input, stream);
           }
           else {
-            this.serializeElements(segment.elements, new_input, stream);
+            this.serializeElements(segment.elements, new_input, segment.trim, stream);
             segmentCount += this.serializeSegments(segment.children, new_input, stream);
             this.serializeCloseRule(segment.closeRule, new_input, segmentCount, stream);
-            segmentCount += this.updateSegmentCount(segmentCount, segment);
+            segmentCount += this.updateSegmentCount(segment);
           }
         }
         else if (segment.ignore) {
@@ -92,10 +92,10 @@ class X12Serializer {
               segmentCount += this.serializeSegments(segment.children, input, stream);
             }
             else {
-              this.serializeElements(segment.elements, input, stream);
+              this.serializeElements(segment.elements, input, segment.trim, stream);
               segmentCount += this.serializeSegments(segment.children, input, stream);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
-              segmentCount += this.updateSegmentCount(segmentCount, segment);
+              segmentCount += this.updateSegmentCount(segment);
             }
           }
         }
@@ -104,10 +104,10 @@ class X12Serializer {
             segmentCount += this.serializeSegments(segment.children, input, stream);
           }
           else {
-            this.serializeElements(segment.elements, input, stream);
+            this.serializeElements(segment.elements, input, segment.trim, stream);
             segmentCount += this.serializeSegments(segment.children, input, stream);
             this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
-            segmentCount += this.updateSegmentCount(segmentCount, segment);
+            segmentCount += this.updateSegmentCount(segment);
           }
         }
       }
@@ -122,18 +122,41 @@ class X12Serializer {
     const newInput = structuredClone(input);
     //@ts-expect-error: cannot assign to generic T
     newInput['_segment_count'] = segmentCount;
-    this.serializeElements(closeRule.elements, newInput, stream);
+    this.serializeElements(closeRule.elements, newInput, closeRule.trim, stream);
   }
-  serializeElements(elements, input, stream) {
-    const elementLength = elements.length - 1;
-    elements.forEach((element, index) => {
+  serializeElements(elementRules, input, trim, stream) {
+    const elements = [];
+    elementRules.forEach((element) => {
       const compile = handlebars_1.default.compile(element.value);
       const output = this.postCompileAttributes(element.attributes, compile(input));
-      stream.write(output);
-      stream.write(index === elementLength ? this.template.segmentSeparator : this.template.elementSeparator);
+      elements.push(output);
     });
+    let output = '';
+    // Trim empty elements
+    if (trim) {
+      let encounteredNonEmptyElement = false;
+      output = elements
+        .reverse()
+        .reduce((acc, element) => {
+          if (element.length === 0 && !encounteredNonEmptyElement) {
+            return acc;
+          }
+          acc.push(element);
+          encounteredNonEmptyElement = true;
+          return acc;
+        }, [])
+        .reverse()
+        .join(this.template.elementSeparator)
+        .concat(this.template.segmentSeparator);
+    }
+    else {
+      output = elements
+        .join(this.template.elementSeparator)
+        .concat(this.template.segmentSeparator);
+    }
+    stream.write(output);
   }
-  updateSegmentCount(segmentCount, segment) {
+  updateSegmentCount(segment) {
     if (!segment.container && segment.closeRule) {
       return 2;
     }
