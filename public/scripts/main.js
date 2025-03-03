@@ -15,105 +15,182 @@ const ExampleJobInput =
   `{
   "documentNumber": 3,
   "data": [
-    {
-      "Employee": true,
-      "Benefit Plans": [
-          {
-              "Benefit Plan Name": "LegalShield/IDShield",
-              "Member Benefit Begin Date": "2025-01-01",
-              "Member Benefit End Date": "9999-12-31",
-              "Relationship Code": "Self",
-              "Coverage Name": "Waived",
-              "Benefit Plan Policy Number": "",
-              "Benefit Plan Provider Name": "",
-              "Vendor": "LegalShield/IDShield",
-              "Benefit Type": "Other (01)",
-              "EOI Provider Name": "",
-              "Benefit Plan Effective From": "01/01/2025",
-              "Benefit Plan Effective To": "12/31/9999"
-          }
-      ],
-      "Subscriber Type": "Subscriber",
-      "Reference ID": 1111111111,
-      "Employee ID": "990",
-      "First Name of Member": "first_name",
-      "Middle Initial of Member": "middle_name",
-      "Last Name of Member": "last_name",
-      "Suffix of Member": "",
-      "Members Date of Birth": "03/25/1982",
-      "SSN of Member": "XXX-XX-XXXX",
-      "SSN of Individual": "XXX-XX-XXXX",
-      "Insured Party Telephone Number": "320 222 2222",
-      "Member Email Address": "email@example.com",
-      "Subscribers Address Line 1": "3333 33th ST N",
-      "Subscribers Address Line 2": "",
-      "Subscribers City": "Brooklyn Park",
-      "Subscribers State": "MN",
-      "Subscribers Zip Code": "55443",
-      "Subscribers Country Code": "US",
-      "Member Hire Date": "03/06/2023",
-      "Member Termination Date": "",
-      "Member Rehire Date": "",
-      "Member Paid Hourly": false,
-      "Member Pay Frequency": "Bi-Weekly",
-      "Member Deceased": false,
-      "Member Employment Status": "Active",
-      "Members Marital Status": "Married",
-      "Member Handicapped": "No",
-      "Members Gender": "F",
-      "Student Status": "N",
-      "Life Event Change": ""
-    },
-    {
-      "Employee": true,
-      "Benefit Plans": [
-          {
-              "Benefit Plan Name": "LegalShield/IDShield",
-              "Member Benefit Begin Date": "2025-01-01",
-              "Member Benefit End Date": "9999-12-31",
-              "Relationship Code": "Self",
-              "Coverage Name": "Waived",
-              "Benefit Plan Policy Number": "",
-              "Benefit Plan Provider Name": "",
-              "Vendor": "LegalShield/IDShield",
-              "Benefit Type": "Other (01)",
-              "EOI Provider Name": "",
-              "Benefit Plan Effective From": "01/01/2025",
-              "Benefit Plan Effective To": "12/31/9999"
-          }
-      ],
-      "Subscriber Type": "Subscriber",
-      "Reference ID": 1111111111,
-      "Employee ID": "990",
-      "First Name of Member": "first_name",
-      "Middle Initial of Member": "middle_name",
-      "Last Name of Member": "last_name",
-      "Suffix of Member": "",
-      "Members Date of Birth": "03/25/1982",
-      "SSN of Member": "XXX-XX-XXXX",
-      "SSN of Individual": "XXX-XX-XXXX",
-      "Insured Party Telephone Number": "320 222 2222",
-      "Member Email Address": "email@example.com",
-      "Subscribers Address Line 1": "3333 33th ST N",
-      "Subscribers Address Line 2": "",
-      "Subscribers City": "Brooklyn Park",
-      "Subscribers State": "MN",
-      "Subscribers Zip Code": "55443",
-      "Subscribers Country Code": "US",
-      "Member Hire Date": "03/06/2023",
-      "Member Termination Date": "",
-      "Member Rehire Date": "",
-      "Member Paid Hourly": false,
-      "Member Pay Frequency": "Bi-Weekly",
-      "Member Deceased": false,
-      "Member Employment Status": "Active",
-      "Members Marital Status": "Married",
-      "Member Handicapped": "No",
-      "Members Gender": "F",
-      "Student Status": "N",
-      "Life Event Change": ""
-    }
-  ]
+  {
+            "Employee": true,
+            "Benefit Plans": [
+                {
+                    "Benefit Plan Name": "Vision",
+                    "Member Benefit Begin Date": "2025-01-01",
+                    "Member Benefit End Date": "9999-12-31",
+                    "Relationship Code": "Self",
+                    "Coverage Name": "Employee",
+                    "Benefit Plan Policy Number": "1017736",
+                    "Benefit Plan Provider Name": "EyeMed",
+                    "Vendor": "EyeMed",
+                    "Benefit Type": "Vision",
+                    "EOI Provider Name": "",
+                    "Benefit Plan Effective From": "01/01/2024",
+                    "Benefit Plan Effective To": "12/31/9999"
+                },
+                {
+                    "Benefit Plan Name": "Vision",
+                    "Member Benefit Begin Date": "2024-06-01",
+                    "Member Benefit End Date": "2024-12-31",
+                    "Relationship Code": "Self",
+                    "Coverage Name": "Employee",
+                    "Benefit Plan Policy Number": "1017736",
+                    "Benefit Plan Provider Name": "EyeMed",
+                    "Vendor": "EyeMed",
+                    "Benefit Type": "Vision",
+                    "EOI Provider Name": "",
+                    "Benefit Plan Effective From": "01/01/2024",
+                    "Benefit Plan Effective To": "12/31/9999"
+                }
+            ],
+            "Cost Centers": {
+                "Program Code": {
+                    "name": "HS Program 25",
+                    "key": "FED",
+                    "externalId": ""
+                },
+                "Location": {
+                    "name": "FDC",
+                    "key": "2",
+                    "externalId": ""
+                },
+                "Benefit Status": {
+                    "name": "Active",
+                    "key": "",
+                    "externalId": ""
+                },
+                "Jobs (HR)": {
+                    "name": "Teacher",
+                    "key": "",
+                    "externalId": ""
+                }
+            },
+            "Subscriber Type": "Subscriber",
+            "Reference ID": "XXXXXXXXXX",
+            "Employee ID": "941",
+            "First Name of Member": "FIRSTNAME",
+            "Middle Initial of Member": "MIDDLE",
+            "Last Name of Member": "LASTNAME",
+            "Suffix of Member": "",
+            "Members Date of Birth": "02/26/1982",
+            "SSN of Member": "XXX-XX-XXXX",
+            "SSN of Individual": "XXX-XX-XXXX",
+            "Insured Party Telephone Number": "",
+            "Member Email Address": "example@contoso.org",
+            "Subscribers Address Line 1": "11111 sample st",
+            "Subscribers Address Line 2": "",
+            "Subscribers City": "Minneapolis",
+            "Subscribers State": "MN",
+            "Subscribers Zip Code": "55433",
+            "Subscribers Country Code": "US",
+            "Member Hire Date": "09/03/2020",
+            "Member Termination Date": "",
+            "Member Rehire Date": "08/16/2021",
+            "Member Paid Hourly": false,
+            "Member Pay Frequency": "Bi-Weekly",
+            "Member Deceased": false,
+            "Member Employment Status": "Active",
+            "Members Marital Status": "Married",
+            "Member Handicapped": "No",
+            "Members Gender": "F",
+            "Student Status": "N",
+            "Qualifying Event": {
+                "Life Event Change": "Divorce/Legal Separation",
+                "Effective Date": "06/01/2024"
+            }
+        },
+        {
+            "Employee": true,
+            "Benefit Plans": [
+                {
+                    "Benefit Plan Name": "Vision",
+                    "Member Benefit Begin Date": "2024-02-01",
+                    "Member Benefit End Date": "2024-12-31",
+                    "Relationship Code": "Self",
+                    "Coverage Name": "Employee + Spouse",
+                    "Benefit Plan Policy Number": "1017736",
+                    "Benefit Plan Provider Name": "EyeMed",
+                    "Vendor": "EyeMed",
+                    "Benefit Type": "Vision",
+                    "EOI Provider Name": "",
+                    "Benefit Plan Effective From": "01/01/2024",
+                    "Benefit Plan Effective To": "12/31/9999"
+                },
+                {
+                    "Benefit Plan Name": "Vision",
+                    "Member Benefit Begin Date": "2025-01-01",
+                    "Member Benefit End Date": "9999-12-31",
+                    "Relationship Code": "Self",
+                    "Coverage Name": "Employee + Spouse",
+                    "Benefit Plan Policy Number": "1017736",
+                    "Benefit Plan Provider Name": "EyeMed",
+                    "Vendor": "EyeMed",
+                    "Benefit Type": "Vision",
+                    "EOI Provider Name": "",
+                    "Benefit Plan Effective From": "01/01/2024",
+                    "Benefit Plan Effective To": "12/31/9999"
+                }
+            ],
+            "Cost Centers": {
+                "Program Code": {
+                    "name": "HS Program 25",
+                    "key": "FED",
+                    "externalId": ""
+                },
+                "Location": {
+                    "name": "FDC",
+                    "key": "2",
+                    "externalId": ""
+                },
+                "Benefit Status": {
+                    "name": "Active",
+                    "key": "",
+                    "externalId": ""
+                },
+                "Jobs (HR)": {
+                    "name": "Assistant Teacher II",
+                    "key": "",
+                    "externalId": ""
+                }
+            },
+            "Subscriber Type": "Subscriber",
+            "Reference ID": "XXXXXXXX",
+            "Employee ID": "808",
+            "First Name of Member": "FIRSTNAME",
+            "Middle Initial of Member": "",
+            "Last Name of Member": "LASTNAME",
+            "Suffix of Member": "",
+            "Members Date of Birth": "08/27/1990",
+            "SSN of Member": "XXX-XX-XXXX",
+            "SSN of Individual": "XXX-XX-XXXX",
+            "Insured Party Telephone Number": "",
+            "Member Email Address": "example@sample.org",
+            "Subscribers Address Line 1": "22222 9th St NE",
+            "Subscribers Address Line 2": "",
+            "Subscribers City": "St. Paul",
+            "Subscribers State": "MN",
+            "Subscribers Zip Code": "55434",
+            "Subscribers Country Code": "US",
+            "Member Hire Date": "01/03/2017",
+            "Member Termination Date": "",
+            "Member Rehire Date": "09/07/2022",
+            "Member Paid Hourly": false,
+            "Member Pay Frequency": "Bi-Weekly",
+            "Member Deceased": false,
+            "Member Employment Status": "Active",
+            "Members Marital Status": "Married",
+            "Member Handicapped": "No",
+            "Members Gender": "F",
+            "Student Status": "N",
+            "Qualifying Event": {
+                "Life Event Change": "Change In Spouse Employment Status",
+                "Effective Date": "02/01/2024"
+            }
+        }]
 }`;
 
 // Load the language_tools extension
