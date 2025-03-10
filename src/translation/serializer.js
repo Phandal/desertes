@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function(mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.X12Serializer = void 0;
 const handlebars_1 = __importDefault(require("handlebars"));
-const date_fns_1 = require("date-fns");
 const stream_1 = require("stream");
+const date_fns_1 = require("date-fns");
 const NoOpFilter = (_input) => { return 'true'; };
 class X12Serializer {
   input;
@@ -215,6 +215,41 @@ class X12Serializer {
       const dateStr = typeof input === 'string' ? new Date(input) : new Date().toISOString();
       return new handlebars_1.default.SafeString((0, date_fns_1.format)(dateStr, format));
     });
+    handlebars_1.default.registerHelper('dateCompare', function(key, operator, input, options) {
+      let result;
+      const ad = getDateFromKey(key);
+      const bd = new Date(input);
+      switch (operator) {
+        case '==':
+          result = ad === bd;
+          break;
+        case '!=':
+          result = ad !== bd;
+          break;
+        case '<=':
+          result = ad <= bd;
+          break;
+        case '>=':
+          result = ad >= bd;
+          break;
+        case '<':
+          result = ad < bd;
+          break;
+        case '>':
+          result = ad > bd;
+          break;
+        default:
+          throw new Error(`invalid date compare operator: ${operator}`);
+      }
+      if (result) {
+        //@ts-expect-error: no-implicit-any
+        return options.fn(this);
+      }
+      else {
+        //@ts-expect-error: no-implicit-any
+        return options.inverse(this);
+      }
+    });
     handlebars_1.default.registerHelper('compare', function(a, operator, b, options) {
       let result;
       switch (operator) {
@@ -273,3 +308,17 @@ class X12Serializer {
   }
 }
 exports.X12Serializer = X12Serializer;
+function getDateFromKey(key) {
+  switch (key) {
+    case 'lastweek':
+      return (0, date_fns_1.sub)(new Date(), {
+        weeks: 1,
+      });
+    case 'yesterday':
+      return (0, date_fns_1.sub)(new Date(), {
+        days: 1,
+      });
+    default:
+      throw new Error(`invalid date compare key: ${key}`);
+  }
+}
