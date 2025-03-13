@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'node:path';
 import { X12Serializer } from './translation/serializer.js';
 import * as template from './translation/template.js';
 import { Readable } from 'node:stream';
@@ -15,21 +14,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
-
-app.get('/template', function(_req, res) {
-  console.log('serving template')
-  res.sendFile('template.json', { root: path.join(path.dirname(import.meta.filename), '../schema') })
-});
-
-app.get('/rule', function(_req, res) {
-  console.log('serving rule')
-  res.sendFile('rule.json', { root: path.join(path.dirname(import.meta.filename), '../schema') })
-});
-
-app.get('/element', function(_req, res) {
-  console.log('serving element')
-  res.sendFile('element.json', { root: path.join(path.dirname(import.meta.filename), '../schema') })
-});
 
 app.post('/translate', async function(req, res) {
   try {
@@ -98,5 +82,7 @@ async function loadSchema(uri) {
     throw new Error("Loading Error: " + res.statusText);
   }
 
-  return await res.json();
+  const json = /** @type {AnySchemaObject} */ (await res.json());
+
+  return json;
 }

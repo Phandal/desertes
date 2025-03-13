@@ -11,8 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@types/node": "^22.13.1",
     "ace-code": "^1.37.5",
+    "ace-linters": "^1.5.1",
     "ajv": "^8.17.1",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
@@ -23,6 +23,6 @@
     "@types/ace": "^0.0.52",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
-    "ace-linters": "^1.4.1"
+    "@types/node": "^22.13.1"
   }
 }
