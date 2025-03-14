@@ -1,14 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function(mod) {
-  return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.X12Serializer = void 0;
-const handlebars_1 = __importDefault(require("handlebars"));
-const stream_1 = require("stream");
-const date_fns_1 = require("date-fns");
+import Handlebars from 'handlebars';
+import { PassThrough } from 'stream';
+import { format as datefnsFormat, parse as datefnsParse, sub as datefnsSub, } from 'date-fns';
 const NoOpFilter = (_input) => { return 'true'; };
-class X12Serializer {
+export class X12Serializer {
   input;
   template;
   constructor(input, template) {
@@ -17,7 +11,7 @@ class X12Serializer {
     this.registerHelpers();
   }
   async serialize() {
-    const stream = new stream_1.PassThrough();
+    const stream = new PassThrough();
     await this.startSerializationStream(stream);
     return stream;
   }
@@ -127,7 +121,7 @@ class X12Serializer {
   serializeElements(elementRules, input, trim, stream) {
     const elements = [];
     elementRules.forEach((element) => {
-      const compile = handlebars_1.default.compile(element.value);
+      const compile = Handlebars.compile(element.value);
       const output = this.postCompileAttributes(element.attributes, compile(input));
       elements.push(output);
     });
@@ -194,7 +188,7 @@ class X12Serializer {
     if (!filterExpression) {
       return NoOpFilter;
     }
-    const compile = handlebars_1.default.compile(filterExpression);
+    const compile = Handlebars.compile(filterExpression);
     return (input) => {
       return compile(input);
     };
@@ -211,11 +205,16 @@ class X12Serializer {
     };
   }
   registerHelpers() {
-    handlebars_1.default.registerHelper('dateFormat', function(format, input) {
-      const dateStr = typeof input === 'string' ? new Date(input) : new Date().toISOString();
-      return new handlebars_1.default.SafeString((0, date_fns_1.format)(dateStr, format));
+    Handlebars.registerHelper('dateFormat', function(format, input, inputFormat) {
+      if (typeof input === 'string' && input.length === 0) {
+        return new Handlebars.SafeString('');
+      }
+      else {
+        const dateStr = createValidDate(input, inputFormat);
+        return new Handlebars.SafeString(datefnsFormat(dateStr, format));
+      }
     });
-    handlebars_1.default.registerHelper('dateCompare', function(key, operator, input, options) {
+    Handlebars.registerHelper('dateCompare', function(key, operator, input, options) {
       let result;
       const ad = getDateFromKey(key);
       const bd = new Date(input);
@@ -250,7 +249,7 @@ class X12Serializer {
         return options.inverse(this);
       }
     });
-    handlebars_1.default.registerHelper('compare', function(a, operator, b, options) {
+    Handlebars.registerHelper('compare', function(a, operator, b, options) {
       let result;
       switch (operator) {
         case '==':
@@ -279,46 +278,84 @@ class X12Serializer {
         return options.inverse(this);
       }
     });
-    handlebars_1.default.registerHelper('replace', function(match, replace, d) {
+    Handlebars.registerHelper('replace', function(match, replace, d) {
       if (typeof d !== 'string') {
         return d;
       }
       const reg = RegExp(match);
       return d.replace(reg, replace);
     });
-    handlebars_1.default.registerHelper('replaceAll', function(match, replace, d) {
+    Handlebars.registerHelper('replaceAll', function(match, replace, d) {
       if (typeof d !== 'string') {
         return d;
       }
       const reg = RegExp(match, 'g');
       return d.replaceAll(reg, replace);
     });
-    handlebars_1.default.registerHelper('match', function(val, ...arr) {
+    Handlebars.registerHelper('match', function(val, ...arr) {
       const idx = arr.indexOf(val);
       return idx < 0 ? '' : arr[idx];
     });
-    handlebars_1.default.registerHelper('matchArray', function(val, arr) {
+    Handlebars.registerHelper('matchArray', function(val, arr) {
       const idx = arr.indexOf(val);
       return idx < 0 ? '' : arr[idx];
     });
-    handlebars_1.default.registerHelper('length', function(options) {
+    Handlebars.registerHelper('length', function(options) {
       //@ts-expect-error: no-implicit-any
       return options.fn(this).length.toString();
     });
+    Handlebars.registerHelper('ssnFormat', function(key, ssn) {
+      const { first, second, third } = parseSSN(ssn);
+      switch (key) {
+        case 'dash':
+          return `${first}-${second}-${third}`;
+        case 'nodash':
+          return `${first}${second}${third}`;
+        default:
+          throw new Error(`invalid ssn format key '${key}'`);
+      }
+    });
   }
 }
-exports.X12Serializer = X12Serializer;
 function getDateFromKey(key) {
   switch (key) {
     case 'lastweek':
-      return (0, date_fns_1.sub)(new Date(), {
+      return datefnsSub(new Date(), {
         weeks: 1,
       });
     case 'yesterday':
-      return (0, date_fns_1.sub)(new Date(), {
+      return datefnsSub(new Date(), {
         days: 1,
       });
     default:
       throw new Error(`invalid date compare key: ${key}`);
+  }
+}
+function createValidDate(input, inputFormat) {
+  if (input === undefined || typeof input !== 'string') {
+    return new Date();
+  }
+  if (inputFormat === undefined || typeof inputFormat !== 'string') {
+    return new Date(input);
+  }
+  return datefnsParse(input, inputFormat, new Date());
+}
+function parseSSN(ssn) {
+  if (ssn.length === 9) {
+    return {
+      first: ssn.substring(0, 3),
+      second: ssn.substring(3, 5),
+      third: ssn.substring(5, 9),
+    };
+  }
+  else if (ssn.length === 11 && ssn.charAt(3) === '-' && ssn.charAt(6) === '-') {
+    return {
+      first: ssn.substring(0, 3),
+      second: ssn.substring(4, 6),
+      third: ssn.substring(7, 11),
+    };
+  }
+  else {
+    throw new Error(`invalid ssn format '${ssn.replaceAll(/[a-zA-Z0-9]/g, 'X')}'`);
   }
 }

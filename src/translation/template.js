@@ -1,12 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateSchema = validateSchema;
-exports.loadSchemaHTTPS = loadSchemaHTTPS;
-const ajv_1 = require("ajv");
+import { Ajv } from 'ajv';
 /**
   * Validates the template against its schema
   */
-async function validateSchema(template, options) {
+export async function validateSchema(template, options) {
     if (template['$schema'] === undefined) {
         return {
             valid: false,
@@ -21,7 +17,7 @@ async function validateSchema(template, options) {
             ],
         };
     }
-    const ajv = new ajv_1.Ajv(options);
+    const ajv = new Ajv(options);
     const validate = await ajv.compileAsync({ $ref: template['$schema'] });
     const valid = validate(template);
     if (valid) {
@@ -40,7 +36,7 @@ async function validateSchema(template, options) {
 /**
  * Load a schema object from a public http endpoint
 */
-async function loadSchemaHTTPS(uri) {
+export async function loadSchemaHTTPS(uri) {
     const res = await fetch(uri, { method: 'GET' });
     if (!res.ok) {
         throw new Error(`schema loading error: ${res.status}`);

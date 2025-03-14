@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.X12Parser = exports.Element = exports.Segment = exports.Document = void 0;
-const scanner_js_1 = require("#translation/scanner.js");
-class Document {
+import { TokenType, X12Scanner } from '#translation/scanner.js';
+export class Document {
     segments;
     segmentPosition;
     constructor() {
@@ -26,8 +23,7 @@ class Document {
         return this.segments.map((segment) => segment.tag);
     }
 }
-exports.Document = Document;
-class Segment {
+export class Segment {
     tag;
     elements;
     elementPosition;
@@ -51,19 +47,17 @@ class Segment {
         return this.elements[this.elementPosition++];
     }
 }
-exports.Segment = Segment;
-class Element {
+export class Element {
     value;
     constructor(value) {
         this.value = value;
     }
 }
-exports.Element = Element;
-class X12Parser {
+export class X12Parser {
     scanner;
     document;
     constructor(opts) {
-        this.scanner = new scanner_js_1.X12Scanner(opts);
+        this.scanner = new X12Scanner(opts);
         this.document = new Document();
     }
     parse() {
@@ -75,17 +69,17 @@ class X12Parser {
                 break;
             }
             switch (token.type) {
-                case scanner_js_1.TokenType.Element_Separator:
+                case TokenType.Element_Separator:
                     break;
-                case scanner_js_1.TokenType.Segment_Separator:
+                case TokenType.Segment_Separator:
                     this.document.processSegment(currentSegment);
                     currentSegment = new Segment();
                     break;
-                case scanner_js_1.TokenType.Component_Separator:
+                case TokenType.Component_Separator:
                     break; // TODO: not quite sure what to do with these exactly
-                case scanner_js_1.TokenType.Repetition_Separator:
+                case TokenType.Repetition_Separator:
                     break; // TODO: not quite sure what to do with these exactly
-                case scanner_js_1.TokenType.Element:
+                case TokenType.Element:
                     currentSegment.processElement(token);
                     break;
                 default:
@@ -95,4 +89,3 @@ class X12Parser {
         return this.document;
     }
 }
-exports.X12Parser = X12Parser;

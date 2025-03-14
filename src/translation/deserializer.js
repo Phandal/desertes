@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.X12Deserializer = void 0;
-const parser_js_1 = require("#translation/parser.js");
-class X12Deserializer {
+import { X12Parser } from '#translation/parser.js';
+export class X12Deserializer {
     input;
     template;
     tree = undefined;
@@ -11,7 +8,7 @@ class X12Deserializer {
         this.template = template;
     }
     deserialize() {
-        const parser = new parser_js_1.X12Parser({
+        const parser = new X12Parser({
             elementSeparator: this.template.elementSeparator,
             segmentSeparator: this.template.segmentSeparator,
             componentSeparator: this.template.componentSeparator,
@@ -103,4 +100,3 @@ class X12Deserializer {
         return seg;
     }
 }
-exports.X12Deserializer = X12Deserializer;

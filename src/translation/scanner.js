@@ -1,16 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.X12Scanner = exports.Token = exports.TokenType = void 0;
-var TokenType;
+export var TokenType;
 (function (TokenType) {
     TokenType[TokenType["Element"] = 0] = "Element";
     TokenType[TokenType["Element_Separator"] = 1] = "Element_Separator";
     TokenType[TokenType["Segment_Separator"] = 2] = "Segment_Separator";
     TokenType[TokenType["Component_Separator"] = 3] = "Component_Separator";
     TokenType[TokenType["Repetition_Separator"] = 4] = "Repetition_Separator";
-})(TokenType || (exports.TokenType = TokenType = {}));
+})(TokenType || (TokenType = {}));
 ;
-class Token {
+export class Token {
     type;
     value;
     constructor(type, value) {
@@ -21,8 +18,7 @@ class Token {
         return this.value;
     }
 }
-exports.Token = Token;
-class X12Scanner {
+export class X12Scanner {
     elementSep;
     segmentSep;
     componentSep;
@@ -119,4 +115,3 @@ class X12Scanner {
         return new Token(TokenType.Element, elementValue);
     }
 }
-exports.X12Scanner = X12Scanner;
