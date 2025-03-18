@@ -1,15 +1,31 @@
-body, html {
+html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-body {
-  width: 100vw;
+#container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#links {
+  width: 50%;
+  display: flex;
+  justify-content: space-around;
+}
+
+#app {
   height: 100vh;
   display: grid;
-  grid-gap: .5em;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 4% 48% 48%;
+  grid-gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
   grid-template-areas:
     "toolbar toolbar"
     "editor input"
