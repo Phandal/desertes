@@ -36,36 +36,35 @@ const inputEditorDiv = <HTMLDivElement>(
 const outputEditorDiv = <HTMLDivElement>(
 	document.querySelector('div#output-editor')
 );
-const serializeButton = <HTMLButtonElement>(
-	document.querySelector('button#serialize')
+const deserializeButton = <HTMLButtonElement>(
+	document.querySelector('button#deserialize')
 );
 const clearButton = <HTMLButtonElement>document.querySelector('button#clear');
 const saveButton = <HTMLButtonElement>document.querySelector('button#save');
 const fileInput = <HTMLInputElement>document.querySelector('input#load');
 
 const templateEditor = makeEditor(templateEditorDiv, { language: 'json' });
-const inputEditor = makeEditor(inputEditorDiv, { language: 'json' });
+const inputEditor = makeEditor(inputEditorDiv, { language: 'text' });
 const outputEditor = makeEditor(outputEditorDiv, {
 	readOnly: true,
-	language: 'text',
+	language: 'json',
 });
 
 templateEditor.setValue(json);
 
-serializeButton.addEventListener('click', async () => {
+deserializeButton.addEventListener('click', async () => {
 	try {
 		const template = JSON.parse(templateEditor.getValue() || '{}');
-		const input = JSON.parse(inputEditor.getValue() || '{}');
-
-		const serializerInput = {
-			members: input.data || [],
-			referenceIdentifier: input.documentNumber || 1,
-		};
+		const deserializerInput = inputEditor.getValue();
 
 		const response = await fetch('/translate', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ mode: 'serialize', template, serializerInput }),
+			body: JSON.stringify({
+				mode: 'deserialize',
+				template,
+				deserializerInput,
+			}),
 		});
 		const body = await response.text();
 		outputEditor.setValue(body);
