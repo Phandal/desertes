@@ -1,9 +1,12 @@
-import { type Document, type Segment, X12Parser } from './parser.js';
-import type {
+import Handlebars from 'handlebars';
+import * as util from './util.js';
+import { Document, Element, Segment, X12Parser } from './parser.js';
+import {
 	ContainerSegmentRule,
 	Deserializer,
 	EDIObject,
 	EDISegment,
+	ElementRule,
 	SegmentRule,
 	StandardSegmentRule,
 	Template,
@@ -17,6 +20,8 @@ export class X12Deserializer implements Deserializer {
 	constructor(input: string, template: Template) {
 		this.input = input;
 		this.template = template;
+		util.setupLogger();
+		util.registerHelpers();
 	}
 
 	deserialize(): EDIObject {
@@ -76,7 +81,7 @@ export class X12Deserializer implements Deserializer {
 	): EDIObject {
 		let tempSeg: EDISegment = {};
 		for (const element of standardRule.elements) {
-			const value = segment.nextElement()?.value;
+			const value = this.deserializeElement(segment.nextElement(), element);
 			tempSeg[element.name] = value;
 		}
 
@@ -119,6 +124,19 @@ export class X12Deserializer implements Deserializer {
 		tempSeg = this.addContainer(tempSeg, container);
 		obj = this.addSegment(obj, containerRule.name, tempSeg);
 		return obj;
+	}
+
+	private deserializeElement(
+		element: Element | null,
+		rule: ElementRule,
+	): string | undefined {
+		if (element === null) {
+			return undefined;
+		}
+
+		const compile = Handlebars.compile(rule.value);
+		const input = compile({ _v: element.value });
+		return util.postCompileAttributes(rule.attributes, input);
 	}
 
 	private addSegment(

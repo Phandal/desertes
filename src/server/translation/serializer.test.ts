@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { X12Serializer } from './serializer.js';
-import type { Template } from './types.js';
-import type { Readable } from 'node:stream';
+import { X12Serializer } from '#translation/serializer.js';
+import { Template } from '#translation/types.js';
+import { Readable } from 'node:stream';
 
 function readStream(stream: Readable): Promise<string> {
 	const chunks: Uint8Array[] = [];

@@ -1,9 +1,4 @@
-import {
-	type Token,
-	TokenType,
-	X12Scanner,
-	type X12ScannerOptions,
-} from './scanner.js';
+import { Token, TokenType, X12Scanner, X12ScannerOptions } from './scanner.js';
 
 export class Document {
 	segments: Segment[];

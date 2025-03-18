@@ -1,10 +1,6 @@
 import { Ajv } from 'ajv';
-import type { Template } from './types.js';
-import type {
-	AnySchemaObject,
-	CurrentOptions,
-	ErrorObject,
-} from 'ajv/dist/core.js';
+import { Template } from './types.js';
+import { AnySchemaObject, CurrentOptions, ErrorObject } from 'ajv/dist/core.js';
 
 export type ValidationResponse =
 	| PassValidationResponse
