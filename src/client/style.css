@@ -6,6 +6,12 @@ html, body {
   flex-direction: column;
 }
 
+footer {
+  font-size: x-small;
+  display: flex;
+  justify-content: center;
+}
+
 #container {
   height: 100vh;
   display: flex;
