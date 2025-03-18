@@ -26,6 +26,221 @@ const json = `{
   "$schema": "https://storageukgreadyedi.blob.core.windows.net/schema-files/template.json",
 }` as const;
 
+const memberJson = `{
+  "data": [
+    {
+      "Employee": true,
+      "Benefit Plans": [
+        {
+          "Benefit Plan Name": "Dental",
+          "Member Benefit Begin Date": "2024-12-01",
+          "Member Benefit End Date": "9999-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Waived",
+          "Benefit Plan Policy Number": "PXXXX",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Dental",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2024",
+          "Benefit Plan Effective To": "12/31/9999"
+        }
+      ],
+      "Cost Centers": {
+        "Location": {
+          "name": "Home",
+          "key": "",
+          "externalId": "",
+          "level1": "Home",
+          "level2": "Home"
+        },
+        "Department": {
+          "name": "After Market",
+          "key": "",
+          "externalId": "",
+          "level1": "After Market",
+          "level2": ""
+        },
+        "Jobs (HR)": {
+          "name": "Admin I",
+          "key": "",
+          "externalId": "",
+          "level1": "Admin I"
+        }
+      },
+      "Subscriber Type": "Subscriber",
+      "Reference ID": "XXXXXXXXXX",
+      "Employee ID": "",
+      "First Name of Member": "FirstName1",
+      "Middle Initial of Member": "MiddleName1",
+      "Last Name of Member": "LasName1",
+      "Suffix of Member": "",
+      "Members Date of Birth": "01/01/1985",
+      "SSN of Member": "222-22-2222",
+      "SSN of Individual": "222-22-2222",
+      "Insured Party Telephone Number": "333-222-5555",
+      "Member Email Address": "sample@example.com",
+      "Subscribers Address Line 1": "111 Park Ave North",
+      "Subscribers Address Line 2": "",
+      "Subscribers City": "St. Michael",
+      "Subscribers State": "NM",
+      "Subscribers Zip Code": "56666",
+      "Subscribers Country Code": "US",
+      "Member Hire Date": "08/25/2023",
+      "Member Termination Date": "",
+      "Member Rehire Date": "08/25/2023",
+      "Member Paid Hourly": false,
+      "Member Pay Frequency": "Bi-Weekly",
+      "Member Deceased": false,
+      "Member Employment Status": "Leave of Absence",
+      "Members Marital Status": "",
+      "Member Handicapped": "",
+      "Members Gender": "U",
+      "Student Status": "N",
+      "Member Smoker": false,
+      "Qualifying Event": {
+        "Life Event Change": "HSA Changes",
+        "Effective Date": "05/13/2024"
+      }
+    },
+    {
+      "Employee": true,
+      "Benefit Plans": [
+        {
+          "Benefit Plan Name": "Dental",
+          "Member Benefit Begin Date": "2025-01-01",
+          "Member Benefit End Date": "9999-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Employee",
+          "Benefit Plan Policy Number": "PPXXX",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Dental",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2024",
+          "Benefit Plan Effective To": "12/31/9999"
+        },
+        {
+          "Benefit Plan Name": "Dental",
+          "Member Benefit Begin Date": "2024-01-01",
+          "Member Benefit End Date": "2024-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Employee",
+          "Benefit Plan Policy Number": "PPXXX",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Dental",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2024",
+          "Benefit Plan Effective To": "12/31/9999"
+        },
+        {
+          "Benefit Plan Name": "HealthPartners $1650/$3300 75% HSA Plus Non-Embedded",
+          "Member Benefit Begin Date": "2025-01-01",
+          "Member Benefit End Date": "9999-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Employee (Standard)",
+          "Benefit Plan Policy Number": "CCCCP",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Medical",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2025",
+          "Benefit Plan Effective To": "12/31/9999"
+        },
+        {
+          "Benefit Plan Name": "HealthPartners $3300/$6600 75% HSA Plus Embedded",
+          "Member Benefit Begin Date": "2025-01-01",
+          "Member Benefit End Date": "9999-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Waived",
+          "Benefit Plan Policy Number": "CCCPP",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Medical",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2025",
+          "Benefit Plan Effective To": "12/31/9999"
+        },
+        {
+          "Benefit Plan Name": "HealthPartners $6000/$12000 75% HSA Plus Embedded",
+          "Member Benefit Begin Date": "2025-01-01",
+          "Member Benefit End Date": "9999-12-31",
+          "Relationship Code": "Self",
+          "Coverage Name": "Waived",
+          "Benefit Plan Policy Number": "CCPPPS",
+          "Benefit Plan Provider Name": "HealthPartners",
+          "Vendor": "HealthPartners",
+          "Benefit Type": "Medical",
+          "EOI Provider Name": "",
+          "Benefit Plan Effective From": "01/01/2025",
+          "Benefit Plan Effective To": "12/31/9999"
+        }
+      ],
+      "Cost Centers": {
+        "Location": {
+          "name": "New York, NY",
+          "key": "",
+          "externalId": "",
+          "level1": "Level1",
+          "level2": "New York, NY"
+        },
+        "Department": {
+          "name": "Engineering",
+          "key": "",
+          "externalId": "",
+          "level1": "Engineering",
+          "level2": ""
+        },
+        "LOA State": {
+          "name": "NY",
+          "key": "",
+          "externalId": "",
+          "level1": "NY",
+          "level2": ""
+        },
+        "Jobs (HR)": {
+          "name": "Engineer III",
+          "key": "",
+          "externalId": "",
+          "level1": "Engineer III"
+        }
+      },
+      "Subscriber Type": "Subscriber",
+      "Reference ID": "XXXXXXXXXX",
+      "Employee ID": "888",
+      "First Name of Member": "FirstName2",
+      "Middle Initial of Member": "N",
+      "Last Name of Member": "LastName2",
+      "Suffix of Member": "",
+      "Members Date of Birth": "03/05/1966",
+      "SSN of Member": "333-33-3333",
+      "SSN of Individual": "333-33-3333",
+      "Insured Party Telephone Number": "555-888-9999",
+      "Member Email Address": "sample2@example.com",
+      "Subscribers Address Line 1": "222 40th St NW",
+      "Subscribers Address Line 2": "",
+      "Subscribers City": "New York",
+      "Subscribers State": "NY",
+      "Subscribers Zip Code": "33333",
+      "Subscribers Country Code": "US",
+      "Member Hire Date": "01/28/2019",
+      "Member Termination Date": "",
+      "Member Rehire Date": "",
+      "Member Paid Hourly": false,
+      "Member Pay Frequency": "Inc Bi-Weekly",
+      "Member Deceased": false,
+      "Member Employment Status": "Active",
+      "Members Marital Status": "S",
+      "Member Handicapped": "",
+      "Members Gender": "M",
+      "Student Status": "N",
+      "Member Smoker": false
+    }
+  ]
+}
+`;
+
 let Filename = 'template.json';
 const templateEditorDiv = <HTMLDivElement>(
 	document.querySelector('div#template-editor')
@@ -51,6 +266,7 @@ const outputEditor = makeEditor(outputEditorDiv, {
 });
 
 templateEditor.setValue(json);
+inputEditor.setValue(memberJson);
 
 serializeButton.addEventListener('click', async () => {
 	try {
