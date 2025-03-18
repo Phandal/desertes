@@ -16,8 +16,11 @@
   },
   "dependencies": {
     "@biomejs/biome": "^1.9.4",
+    "ajv": "^8.17.1",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "express": "^4.18.2",
+    "handlebars": "^4.7.8",
     "monaco-editor": "^0.52.2",
     "tsx": "^4.5.0",
     "typescript": "^5.3.2",

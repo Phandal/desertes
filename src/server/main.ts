@@ -18,7 +18,6 @@ app.get('/translate', (_, res) => {
 });
 
 app.get('^/$', (_, res) => {
-	console.log('here');
 	res.redirect('routes/');
 });
 
