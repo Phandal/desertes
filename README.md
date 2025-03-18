@@ -9,5 +9,6 @@ Quick and dirty template create helper for K-Pay EDI App
 git clone https://github.com/Phandal/desertes
 cd desertes
 npm install
-npm run serve
+npm run build
+npm run start
 ```
