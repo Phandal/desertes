@@ -6,6 +6,15 @@ html, body {
   flex-direction: column;
 }
 
+#desertes {
+  font-size: xxx-large;
+}
+
+.main-link {
+  font-size: x-large;
+}
+
+
 footer {
   font-size: x-small;
   display: flex;
