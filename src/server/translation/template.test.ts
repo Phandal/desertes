@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert';
-import { loadSchemaHTTPS, validateSchema } from '#translation/template.js';
+import { loadSchemaHTTPS, validateSchema } from './template.js';
 
 class FetchMock {
   private responseBody = '';

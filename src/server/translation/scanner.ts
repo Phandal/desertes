@@ -1,5 +1,6 @@
 interface Scanner {
   scan: () => Token[]
+  peekToken: () => Token | null;
   nextToken: () => Token | null;
 }
 
@@ -57,6 +58,14 @@ export class X12Scanner implements Scanner {
       this.tokens.push(this.scan_token());
     }
     return this.tokens;
+  }
+
+  peekToken(): Token | null {
+    if (this.tokenPos >= this.tokens.length) {
+      return null;
+    }
+
+    return this.tokens[this.tokenPos];
   }
 
   nextToken(): Token | null {

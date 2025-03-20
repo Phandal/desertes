@@ -1,13 +1,13 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { X12Deserializer } from '#translation/deserializer.js';
-import { Template } from '#translation/types.js';
+import { X12Deserializer } from './deserializer.js';
+import { Template } from './types.js';
 
 describe('X12Deserializer deserialize method', () => {
   it('should deserialize a document into an edi object from a template', () => {
     const input = 'ISA*00~GS*01~ST*834~';
 
-    const deserializeTemplate: Template = {
+    const template: Template = {
       $schema: '',
       name: '',
       version: '0.0.1',
@@ -97,7 +97,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, deserializeTemplate);
+    const deserializer = new X12Deserializer(input, template);
     const got = deserializer.deserialize();
 
     assert.deepEqual(got, want);
@@ -106,7 +106,7 @@ describe('X12Deserializer deserialize method', () => {
   it('should be able to deserialize 2 sibling segments with the same header', () => {
     const input = 'ISA_first*01~ISA_second*02~';
 
-    const deserializeSiblingTemplate: Template = {
+    const template: Template = {
       $schema: '',
       name: '',
       version: '0.0.1',
@@ -146,7 +146,281 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, deserializeSiblingTemplate);
+    const deserializer = new X12Deserializer(input, template);
+    const got = deserializer.deserialize();
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to deserialize with skipped rows', () => {
+    const input = 'Name,Age\nJack,25\nJohn,26\n';
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: ':::',
+      repetitionSeparator: '!!!',
+      rules: [
+        {
+          name: 'ISA',
+          container: false,
+          numberOfRowsToSkip: 1,
+          elements: [
+            {
+              name: 'Name',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Age',
+              value: '{{_v}}',
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = {
+      ISA: [
+        {
+          Name: 'Jack',
+          Age: 25,
+        },
+        {
+          Name: 'John',
+          Age: 26,
+        },
+      ],
+    };
+
+    const deserializer = new X12Deserializer(input, template);
+    const got = deserializer.deserialize();
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to deserialize when the last segment does not end in a segment separator', () => {
+    const input = 'Name,Gender,Age\nJack,Male,25\nJohn,Male,26';
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: ':::',
+      repetitionSeparator: '!!!',
+      rules: [
+        {
+          name: 'ISA',
+          container: false,
+          numberOfRowsToSkip: 1,
+          elements: [
+            {
+              name: 'Name',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Gender',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Age',
+              value: '{{_v}}',
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = {
+      ISA: [
+        {
+          Name: 'Jack',
+          Gender: 'Male',
+          Age: 25,
+        },
+        {
+          Name: 'John',
+          Gender: 'Male',
+          Age: 26,
+        },
+      ],
+    };
+
+    const deserializer = new X12Deserializer(input, template);
+    const got = deserializer.deserialize();
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to deserialize when the last segment does not end in a segment separator and the last element is empty', () => {
+    const input = 'Name,Gender,Age\nJack,Male,26\nJohn,Male,';
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: ':::',
+      repetitionSeparator: '!!!',
+      rules: [
+        {
+          name: 'ISA',
+          container: false,
+          numberOfRowsToSkip: 1,
+          elements: [
+            {
+              name: 'Name',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Gender',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Age',
+              value: '{{_v}}',
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = {
+      ISA: [
+        {
+          Name: 'Jack',
+          Gender: 'Male',
+          Age: 26,
+        },
+        {
+          Name: 'John',
+          Gender: 'Male',
+          Age: '',
+        },
+      ],
+    };
+
+    const deserializer = new X12Deserializer(input, template);
+    const got = deserializer.deserialize();
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to deserialize with empty elements as the last segment', () => {
+    const input = 'Name,Gender,Age\nJack,Male,\nJohn,Male,26\n';
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: ':::',
+      repetitionSeparator: '!!!',
+      rules: [
+        {
+          name: 'ISA',
+          container: false,
+          numberOfRowsToSkip: 1,
+          elements: [
+            {
+              name: 'Name',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Gender',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Age',
+              value: '{{_v}}',
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = {
+      ISA: [
+        {
+          Name: 'Jack',
+          Gender: 'Male',
+          Age: '',
+        },
+        {
+          Name: 'John',
+          Gender: 'Male',
+          Age: 26,
+        },
+      ],
+    };
+
+    const deserializer = new X12Deserializer(input, template);
+    const got = deserializer.deserialize();
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to deserialize with empty elements', () => {
+    const input = 'Name,Gender,Age\nJack,,25\nJohn,Male,26\n';
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: ':::',
+      repetitionSeparator: '!!!',
+      rules: [
+        {
+          name: 'ISA',
+          container: false,
+          numberOfRowsToSkip: 1,
+          elements: [
+            {
+              name: 'Name',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Gender',
+              value: '{{_v}}',
+            },
+            {
+              name: 'Age',
+              value: '{{_v}}',
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = {
+      ISA: [
+        {
+          Name: 'Jack',
+          Gender: '',
+          Age: 25,
+        },
+        {
+          Name: 'John',
+          Gender: 'Male',
+          Age: 26,
+        },
+      ],
+    };
+
+    const deserializer = new X12Deserializer(input, template);
     const got = deserializer.deserialize();
 
     assert.deepEqual(got, want);
