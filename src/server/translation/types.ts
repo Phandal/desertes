@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 
 export type Template = {
   $schema: string;
@@ -67,7 +67,7 @@ export type LengthAttribute = {
 export interface Serializer<T extends Record<string, unknown>> {
   input: T;
   template: Template;
-  serialize: () => Promise<Readable>;
+  serialize: (stream: PassThrough) => Promise<Readable>;
 }
 
 export interface Deserializer {

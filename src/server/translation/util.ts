@@ -1,10 +1,11 @@
 import Handlebars from 'handlebars';
 import { ElementRuleAttribute } from './types.js';
-import {
-  format as datefnsFormat,
-  parse as datefnsParse,
-  sub as datefnsSub,
-} from 'date-fns';
+import * as dateFns from 'date-fns';
+// import {
+//   format as datefnsFormat,
+//   parse as datefnsParse,
+//   sub as datefnsSub,
+// } from 'date-fns';
 
 export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, input: string): string {
   if (!attrs) {
@@ -50,7 +51,7 @@ export function registerHelpers(): void {
       return new Handlebars.SafeString('');
     } else {
       const dateStr = createValidDate(input, inputFormat);
-      return new Handlebars.SafeString(datefnsFormat(dateStr, format));
+      return new Handlebars.SafeString(dateFns.format(dateStr, format));
     }
   });
 
@@ -173,16 +174,139 @@ export function registerHelpers(): void {
         throw new Error(`invalid ssn format key '${key}'`);
     }
   });
+
+  Handlebars.registerHelper('getDate', function (mode: string, period: string, unit: string): string {
+
+    if (!isMode(mode)) { throw new Error(`invalid mode '${mode}'`); }
+    if (!isPeriod(period)) { throw new Error(`invalid period '${period}'`); }
+    if (!isUnit(unit)) { throw new Error(`invalid unit '${unit}'`); }
+
+    switch (mode) {
+      case 'start':
+        return dateFns.format(getDateStart(period, unit), 'MM/dd/yyyy');
+      case 'end':
+        return dateFns.format(getDateEnd(period, unit), 'MM/dd/yyyy');
+    }
+  });
+}
+
+type Mode = 'start' | 'end';
+type Period = 'next' | 'current' | 'previous';
+type Unit = 'week' | 'month' | 'year';
+
+function isMode(modeString: string): modeString is Mode {
+  return (modeString === 'start' || modeString === 'end');
+}
+function isPeriod(periodString: string): periodString is Period {
+  return (periodString === 'previous' || periodString === 'current' || periodString === 'next');
+}
+
+function isUnit(unitString: string): unitString is Unit {
+  return (unitString === 'week' || unitString === 'month' || unitString === 'year');
+}
+
+function getDateStart(period: Period, unit: Unit): Date {
+  switch (period) {
+    case 'next':
+      return getDateStartNext(unit);
+    case 'current':
+      return getDateStartCurrent(unit);
+    case 'previous':
+      return getDateStartPrevious(unit);
+  }
+}
+
+function getDateEnd(period: Period, unit: Unit): Date {
+  switch (period) {
+    case 'next':
+      return getDateEndNext(unit);
+    case 'current':
+      return getDateEndCurrent(unit);
+    case 'previous':
+      return getDateEndPrevious(unit);
+  }
+}
+
+function getDateStartNext(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.startOfWeek(dateFns.addWeeks(now, 1));
+    case 'month':
+      return dateFns.startOfMonth(dateFns.addMonths(now, 1));
+    case 'year':
+      return dateFns.startOfYear(dateFns.addYears(now, 1));
+  }
+}
+
+function getDateStartCurrent(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.startOfWeek(now);
+    case 'month':
+      return dateFns.startOfMonth(now);
+    case 'year':
+      return dateFns.startOfYear(now);
+  }
+}
+
+function getDateStartPrevious(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.startOfWeek(dateFns.subWeeks(now, 1));
+    case 'month':
+      return dateFns.startOfMonth(dateFns.subMonths(now, 1));
+    case 'year':
+      return dateFns.startOfYear(dateFns.subYears(now, 1));
+  }
+}
+
+function getDateEndNext(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.endOfWeek(dateFns.addWeeks(now, 1));
+    case 'month':
+      return dateFns.endOfMonth(dateFns.addMonths(now, 1));
+    case 'year':
+      return dateFns.endOfYear(dateFns.addYears(now, 1));
+  }
+}
+
+function getDateEndCurrent(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.endOfWeek(now);
+    case 'month':
+      return dateFns.endOfMonth(now);
+    case 'year':
+      return dateFns.endOfYear(now);
+  }
+}
+
+function getDateEndPrevious(unit: Unit): Date {
+  const now = new Date();
+  switch (unit) {
+    case 'week':
+      return dateFns.endOfWeek(dateFns.subWeeks(now, 1));
+    case 'month':
+      return dateFns.endOfMonth(dateFns.subMonths(now, 1));
+    case 'year':
+      return dateFns.endOfYear(dateFns.subYears(now, 1));
+  }
 }
 
 function getDateFromKey(key: string): Date {
   switch (key) {
     case 'lastweek':
-      return datefnsSub(new Date(), {
+      return dateFns.sub(new Date(), {
         weeks: 1,
       });
     case 'yesterday':
-      return datefnsSub(new Date(), {
+      return dateFns.sub(new Date(), {
         days: 1,
       });
     default:
@@ -198,7 +322,7 @@ function createValidDate(input?: string, inputFormat?: string | unknown): Date {
   if (inputFormat === undefined || typeof inputFormat !== 'string') {
     return new Date(input);
   }
-  return datefnsParse(input, inputFormat, new Date());
+  return dateFns.parse(input, inputFormat, new Date());
 }
 
 function parseSSN(ssn: string): { first: string, second: string, third: string } {

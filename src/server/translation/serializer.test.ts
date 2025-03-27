@@ -2,21 +2,14 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { X12Serializer } from './serializer.js';
 import { Template } from './types.js';
-import { Readable } from 'node:stream';
-
-function readStream(stream: Readable): Promise<string> {
-  const chunks: Uint8Array[] = [];
-  return new Promise((res, rej) => {
-    stream.on('data', (chunk) => chunks.push(chunk));
-    stream.on('error', (err) => rej(err));
-    stream.on('end', () => res(Buffer.concat(chunks).toString('utf8')));
-  });
-}
+import { streamToBuffer } from '#test/util.js';
+import { PassThrough } from 'node:stream';
 
 async function serialize(template: Template, input: Record<string, unknown>): Promise<string> {
   const serializer = new X12Serializer(input, template);
-  const stream = await serializer.serialize();
-  return await readStream(stream);
+  const stream = new PassThrough();
+  await serializer.serialize(stream);
+  return (await streamToBuffer(stream)).toString('utf-8');
 }
 
 const input = {
@@ -2261,6 +2254,246 @@ describe('X12Serializer', () => {
       ],
     };
     const want = 'firstname1*lastname~friend11*lastname1*firstname~friend12*lastname1*firstname~firstname2*lastname~friend21*lastname2*firstname~friend22*lastname2*firstname~';
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('getDate helper', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('03/19/2025') });
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '\n',
+      segmentSeparator: '',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'start_previous_week',
+              value: `{{getDate 'start' 'previous' 'week'}}`,
+            },
+            {
+              name: 'start_previous_month',
+              value: `{{getDate 'start' 'previous' 'month'}}`,
+            },
+            {
+              name: 'start_previous_year',
+              value: `{{getDate 'start' 'previous' 'year'}}`,
+            },
+            {
+              name: 'start_current_week',
+              value: `{{getDate 'start' 'current' 'week'}}`,
+            },
+            {
+              name: 'start_current_month',
+              value: `{{getDate 'start' 'current' 'month'}}`,
+            },
+            {
+              name: 'start_current_year',
+              value: `{{getDate 'start' 'current' 'year'}}`,
+            },
+            {
+              name: 'start_next_week',
+              value: `{{getDate 'start' 'next' 'week'}}`,
+            },
+            {
+              name: 'start_next_month',
+              value: `{{getDate 'start' 'next' 'month'}}`,
+            },
+            {
+              name: 'start_next_year',
+              value: `{{getDate 'start' 'next' 'year'}}`,
+            },
+            {
+              name: 'end_previous_week',
+              value: `{{getDate 'end' 'previous' 'week'}}`,
+            },
+            {
+              name: 'end_previous_month',
+              value: `{{getDate 'end' 'previous' 'month'}}`,
+            },
+            {
+              name: 'end_previous_year',
+              value: `{{getDate 'end' 'previous' 'year'}}`,
+            },
+            {
+              name: 'end_current_week',
+              value: `{{getDate 'end' 'current' 'week'}}`,
+            },
+            {
+              name: 'end_current_month',
+              value: `{{getDate 'end' 'current' 'month'}}`,
+            },
+            {
+              name: 'end_current_year',
+              value: `{{getDate 'end' 'current' 'year'}}`,
+            },
+            {
+              name: 'end_next_week',
+              value: `{{getDate 'end' 'next' 'week'}}`,
+            },
+            {
+              name: 'end_next_month',
+              value: `{{getDate 'end' 'next' 'month'}}`,
+            },
+            {
+              name: 'end_next_year',
+              value: `{{getDate 'end' 'next' 'year'}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = [
+      '03/09/2025',
+      '02/01/2025',
+      '01/01/2024',
+      '03/16/2025',
+      '03/01/2025',
+      '01/01/2025',
+      '03/23/2025',
+      '04/01/2025',
+      '01/01/2026',
+      '03/15/2025',
+      '02/28/2025',
+      '12/31/2024',
+      '03/22/2025',
+      '03/31/2025',
+      '12/31/2025',
+      '03/29/2025',
+      '04/30/2025',
+      '12/31/2026',
+    ].join('\n');
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('getDate helper works without input format in dateFormat helper', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('03/19/2025') });
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '\n',
+      segmentSeparator: '',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'start_previous_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'previous' 'week')}}`,
+            },
+            {
+              name: 'start_previous_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'previous' 'month')}}`,
+            },
+            {
+              name: 'start_previous_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'previous' 'year')}}`,
+            },
+            {
+              name: 'start_current_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'current' 'week')}}`,
+            },
+            {
+              name: 'start_current_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'current' 'month')}}`,
+            },
+            {
+              name: 'start_current_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'current' 'year')}}`,
+            },
+            {
+              name: 'start_next_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'next' 'week')}}`,
+            },
+            {
+              name: 'start_next_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'next' 'month')}}`,
+            },
+            {
+              name: 'start_next_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'start' 'next' 'year')}}`,
+            },
+            {
+              name: 'end_previous_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'previous' 'week')}}`,
+            },
+            {
+              name: 'end_previous_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'previous' 'month')}}`,
+            },
+            {
+              name: 'end_previous_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'previous' 'year')}}`,
+            },
+            {
+              name: 'end_current_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'current' 'week')}}`,
+            },
+            {
+              name: 'end_current_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'current' 'month')}}`,
+            },
+            {
+              name: 'end_current_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'current' 'year')}}`,
+            },
+            {
+              name: 'end_next_week',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'next' 'week')}}`,
+            },
+            {
+              name: 'end_next_month',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'next' 'month')}}`,
+            },
+            {
+              name: 'end_next_year',
+              value: `{{dateFormat 'yyyyMMdd' (getDate 'end' 'next' 'year')}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = [
+      '20250309',
+      '20250201',
+      '20240101',
+      '20250316',
+      '20250301',
+      '20250101',
+      '20250323',
+      '20250401',
+      '20260101',
+      '20250315',
+      '20250228',
+      '20241231',
+      '20250322',
+      '20250331',
+      '20251231',
+      '20250329',
+      '20250430',
+      '20261231',
+    ].join('\n');
 
     const got = await serialize(template, input);
 

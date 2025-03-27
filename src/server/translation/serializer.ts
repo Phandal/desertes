@@ -21,22 +21,10 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
     util.registerHelpers();
   }
 
-  public async serialize(): Promise<Readable> {
-    const stream = new PassThrough();
-    await this.startSerializationStream(stream);
+  public async serialize(stream: PassThrough): Promise<Readable> {
+    this.serializeSegments(this.template.rules, this.input, stream);
+    stream.end();
     return stream;
-  }
-
-  private startSerializationStream(stream: Writable): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.serializeSegments(this.template.rules, this.input, stream);
-        stream.end();
-        resolve();
-      } catch (err) {
-        reject(err);
-      }
-    });
   }
 
   private _serializeSegments(segments: SegmentRule[] | undefined, input: T, stream: Writable): Thunk<number> {

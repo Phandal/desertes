@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import type { Readable } from 'node:stream';
+import { PassThrough, type Readable } from 'node:stream';
 import ViteExpress from 'vite-express';
 import * as template from './translation/template.js';
 import { X12Serializer } from './translation/serializer';
@@ -59,7 +59,8 @@ app.post('/translate', async (req, res) => {
 		if (mode === 'serialize') {
 			const input = body.serializerInput;
 			const serializer = new X12Serializer(input, validationResponse.template);
-			const stream = await serializer.serialize();
+			const stream = new PassThrough();
+			await serializer.serialize(stream);
 			output = await readStream(stream);
 		} else if (mode === 'deserialize') {
 			const input = body.deserializerInput;
