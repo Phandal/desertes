@@ -1,14 +1,24 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { X12Serializer } from './serializer.js';
-import { Template } from './types.js';
+import { SerializerFactory, Serializer_0_0_1 } from './serializer.js';
+import { Serializer, Template } from './types.js';
 import { streamToBuffer } from '#test/util.js';
-import { PassThrough } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
+
+SerializerFactory.registerSerializer(new Serializer_0_0_1());
+
+class SerializerStub implements Serializer {
+  readonly version = '0.0.0';
+
+  async serialize(_stream: PassThrough, _input: Record<string, unknown>, _template: Template): Promise<Readable> {
+    return Readable.from('');
+  }
+}
 
 async function serialize(template: Template, input: Record<string, unknown>): Promise<string> {
-  const serializer = new X12Serializer(input, template);
+  const serializer = SerializerFactory.getSerializer(template.version);
   const stream = new PassThrough();
-  await serializer.serialize(stream);
+  await serializer.serialize(stream, input, template);
   return (await streamToBuffer(stream)).toString('utf-8');
 }
 
@@ -48,7 +58,21 @@ const input = {
   ],
 };
 
-describe('X12Serializer', () => {
+describe('SerializerFactory', () => {
+
+  it('register and get work as expected', () => {
+    const serializerStub = new SerializerStub();
+    SerializerFactory.registerSerializer(serializerStub);
+    assert.deepEqual(SerializerFactory.getSerializer('0.0.0'), serializerStub);
+  });
+
+  it('get throws if invalid version', () => {
+    assert.throws(() => { SerializerFactory.getSerializer('-1'); }, SerializerFactory.InvalidVersionError('-1'));
+  });
+
+});
+
+describe('Serializer_0_0_1', () => {
 
   it('should be able to serialize an object to an edi string based on a template without any replacements', async () => {
     const template: Template = {

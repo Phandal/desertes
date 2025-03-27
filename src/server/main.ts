@@ -3,19 +3,22 @@ import cors from 'cors';
 import { PassThrough, type Readable } from 'node:stream';
 import ViteExpress from 'vite-express';
 import * as template from './translation/template.js';
-import { X12Serializer } from './translation/serializer';
+import { SerializerFactory, Serializer_0_0_1 } from './translation/serializer';
 import type { AnySchemaObject } from 'ajv';
-import { X12Deserializer } from './translation/deserializer.js';
+import {
+	DeserializerFactory,
+	Deserializer_0_0_1,
+} from './translation/deserializer.js';
+
+// Setup Factories
+SerializerFactory.registerSerializer(new Serializer_0_0_1());
+DeserializerFactory.registerDeserializer(new Deserializer_0_0_1());
 
 const PORT = 3000;
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.get('/translate', (_, res) => {
-	res.send('Hello Vite + TypeScript!');
-});
 
 app.get('^/$', (_, res) => {
 	res.redirect('routes/');
@@ -58,17 +61,22 @@ app.post('/translate', async (req, res) => {
 		let output = '';
 		if (mode === 'serialize') {
 			const input = body.serializerInput;
-			const serializer = new X12Serializer(input, validationResponse.template);
+			const serializer = SerializerFactory.getSerializer(
+				validationResponse.template.version,
+			);
 			const stream = new PassThrough();
-			await serializer.serialize(stream);
+			await serializer.serialize(stream, input, validationResponse.template);
 			output = await readStream(stream);
 		} else if (mode === 'deserialize') {
 			const input = body.deserializerInput;
-			const deserializer = new X12Deserializer(
-				input,
-				validationResponse.template,
+			const deserializer = DeserializerFactory.getDeserializer(
+				validationResponse.template.version,
 			);
-			output = JSON.stringify(deserializer.deserialize(), null, 2);
+			output = JSON.stringify(
+				deserializer.deserialize(validationResponse.template, input),
+				null,
+				2,
+			);
 		} else {
 			throw new Error(`invalid mode '${mode}'`);
 		}

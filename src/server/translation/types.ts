@@ -64,16 +64,14 @@ export type LengthAttribute = {
   padding?: string;
 }
 
-export interface Serializer<T extends Record<string, unknown>> {
-  input: T;
-  template: Template;
-  serialize: (stream: PassThrough) => Promise<Readable>;
+export interface Serializer {
+  readonly version: string;
+  serialize: (stream: PassThrough, input: Record<string, unknown>, template: Template) => Promise<Readable>;
 }
 
 export interface Deserializer {
-  input: string;
-  template: Template;
-  deserialize: () => EDIObject;
+  readonly version: string;
+  deserialize: (template: Template, input: string) => EDIObject;
 }
 
 export type EDISegment = { [key: string]: string | number | boolean | undefined | EDIObject | EDIObject[] };

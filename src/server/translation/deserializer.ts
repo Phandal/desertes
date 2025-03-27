@@ -3,25 +3,44 @@ import * as util from './util.js';
 import { Document, Element, Segment, X12Parser } from './parser.js';
 import { ContainerSegmentRule, Deserializer, EDIObject, EDISegment, ElementRule, SegmentRule, StandardSegmentRule, Template } from './types.js';
 
-export class X12Deserializer implements Deserializer {
-  input: string;
-  template: Template;
+export class DeserializerFactory {
+  static deserializers: Record<string, Deserializer> = {};
+
+  static registerDeserializer(deserializer: Deserializer): void {
+    this.deserializers[deserializer.version] = deserializer;
+  }
+
+  static getDeserializer(version: string): Deserializer {
+    const deserializer = this.deserializers[version];
+
+    if (!deserializer) {
+      throw this.InvalidVersionError(version);
+    }
+
+    return deserializer;
+  }
+
+  static InvalidVersionError(version: string): Error {
+    return new Error(`invalid deserializer version from template '${version}'`);
+  };
+}
+
+export class Deserializer_0_0_1 implements Deserializer {
+  readonly version = '0.0.1';
   private tree: Document | undefined = undefined;
 
-  constructor(input: string, template: Template) {
-    this.input = input;
-    this.template = template;
+  constructor() {
     util.setupLogger();
     util.registerHelpers();
   }
 
-  deserialize(): EDIObject {
+  deserialize(template: Template, input: string): EDIObject {
     const parser = new X12Parser({
-      elementSeparator: this.template.elementSeparator,
-      segmentSeparator: this.template.segmentSeparator,
-      componentSeparator: this.template.componentSeparator,
-      repetitionSeparator: this.template.repetitionSeparator,
-      input: this.input,
+      elementSeparator: template.elementSeparator,
+      segmentSeparator: template.segmentSeparator,
+      componentSeparator: template.componentSeparator,
+      repetitionSeparator: template.repetitionSeparator,
+      input: input,
     });
 
     this.tree = parser.parse();
@@ -30,7 +49,7 @@ export class X12Deserializer implements Deserializer {
     let currentRowCount = 0;
 
     while (this.tree.hasNextSegment()) {
-      for (const rule of this.template.rules) {
+      for (const rule of template.rules) {
         if (rule.numberOfRowsToSkip && rule.numberOfRowsToSkip > currentRowCount) {
           // Advance the tree to skip the row
           this.tree.nextSegment();

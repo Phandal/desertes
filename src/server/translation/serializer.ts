@@ -10,24 +10,45 @@ type Thunk<K> = K | (() => Thunk<K>);
 
 const NoOpFilter: FilterFunction = (_input: unknown) => { return 'true'; };
 
-export class X12Serializer<T extends Record<string, unknown>> implements Serializer<T> {
-  input: T;
-  template: Template;
+export class SerializerFactory {
+  static serializers: Record<string, Serializer> = {};
 
-  constructor(input: T, template: Template) {
-    this.input = input;
-    this.template = template;
+  static registerSerializer(serializer: Serializer): void {
+    this.serializers[serializer.version] = serializer;
+  }
+
+  static getSerializer(version: string): Serializer {
+    const serializer = this.serializers[version];
+
+    if (!serializer) {
+      throw this.InvalidVersionError(version);
+    }
+
+    return serializer;
+  }
+
+  static InvalidVersionError(version: string): Error {
+    return new Error(`invalid serializer version from template '${version}'`);
+  };
+}
+
+export class Serializer_0_0_1 implements Serializer {
+  readonly version = '0.0.1';
+  template: Template | undefined;
+
+  constructor() {
     util.setupLogger();
     util.registerHelpers();
   }
 
-  public async serialize(stream: PassThrough): Promise<Readable> {
-    this.serializeSegments(this.template.rules, this.input, stream);
+  public async serialize(stream: PassThrough, input: Record<string, unknown>, template: Template): Promise<Readable> {
+    this.template = template;
+    this.serializeSegments(this.template.rules, input, stream);
     stream.end();
     return stream;
   }
 
-  private _serializeSegments(segments: SegmentRule[] | undefined, input: T, stream: Writable): Thunk<number> {
+  private _serializeSegments(segments: SegmentRule[] | undefined, input: Record<string, unknown>, stream: Writable): Thunk<number> {
     if (!segments) {
       return 0;
     }
@@ -41,7 +62,7 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput = repetitionObject !== undefined ? this.getParentInput<T>(repetition.property, input) : undefined;
+          const parentInput = repetitionObject !== undefined ? this.getParentInput(repetition.property, input) : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
             const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
@@ -73,7 +94,6 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
             });
           }
 
-          //@ts-expect-error: cannot assign to generic T
           new_input[filter.property] = filteredObject;
 
           if (segment.container) {
@@ -115,21 +135,20 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
 
   private serializeSegments = this.trampoline<number>(this._serializeSegments);
 
-  private serializeCloseRule(closeRule: CloseSegmentRule | undefined, input: T, segmentCount: number, stream: Writable): void {
+  private serializeCloseRule(closeRule: CloseSegmentRule | undefined, input: Record<string, unknown>, segmentCount: number, stream: Writable): void {
     if (!closeRule) {
       return;
     }
 
     const newInput = structuredClone(input);
-    //@ts-expect-error: cannot assign to generic T
     newInput['_segment_count'] = segmentCount;
     this.serializeElements(closeRule.elements, newInput, closeRule.trim, stream);
   }
 
-  private serializeElements(elementRules: ElementRule[], input: T, trim: boolean | undefined, stream: Writable): void {
+  private serializeElements(elementRules: ElementRule[], input: Record<string, unknown>, trim: boolean | undefined, stream: Writable): void {
     const elements: string[] = [];
     elementRules.forEach((element) => {
-      const compile = Handlebars.compile<T>(element.value);
+      const compile = Handlebars.compile(element.value);
       const output = util.postCompileAttributes(element.attributes, compile(input));
       elements.push(output);
     });
@@ -150,12 +169,12 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
           return acc;
         }, [])
         .reverse()
-        .join(this.template.elementSeparator)
-        .concat(this.template.segmentSeparator);
+        .join(this.template?.elementSeparator || '')
+        .concat(this.template?.segmentSeparator || '');
     } else {
       output = elements
-        .join(this.template.elementSeparator)
-        .concat(this.template.segmentSeparator);
+        .join(this.template?.elementSeparator || '')
+        .concat(this.template?.segmentSeparator || '');
     }
 
     stream.write(output);
@@ -181,7 +200,7 @@ export class X12Serializer<T extends Record<string, unknown>> implements Seriali
     };
   }
 
-  private getParentInput<T>(key: string, { ...props }: T): unknown {
+  private getParentInput(key: string, { ...props }: Record<string, unknown>): unknown {
     return { ...props, [key]: undefined };
   }
 

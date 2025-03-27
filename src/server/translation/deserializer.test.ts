@@ -1,9 +1,37 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { X12Deserializer } from './deserializer.js';
-import { Template } from './types.js';
+import { DeserializerFactory, Deserializer_0_0_1 } from './deserializer.js';
+import { EDIObject, Deserializer, Template } from './types.js';
 
-describe('X12Deserializer deserialize method', () => {
+DeserializerFactory.registerDeserializer(new Deserializer_0_0_1());
+
+class DeserializerStub implements Deserializer {
+  readonly version = '0.0.0';
+
+  deserialize(): EDIObject {
+    return {};
+  };
+}
+
+function deserialize(template: Template, input: string): EDIObject {
+  const deserializer = DeserializerFactory.getDeserializer(template.version);
+  return deserializer.deserialize(template, input);
+}
+
+describe('DeserializerFactory', () => {
+
+  it('register and get work as expected', () => {
+    const deserialierStub = new DeserializerStub();
+    DeserializerFactory.registerDeserializer(deserialierStub);
+    assert.deepEqual(DeserializerFactory.getDeserializer('0.0.0'), deserialierStub);
+  });
+
+  it('get throws if invalid version', () => {
+    assert.throws(() => DeserializerFactory.getDeserializer('-1'), DeserializerFactory.InvalidVersionError('-1'));
+  });
+});
+
+describe('Deserializer_0_0_1', () => {
   it('should deserialize a document into an edi object from a template', () => {
     const input = 'ISA*00~GS*01~ST*834~';
 
@@ -97,8 +125,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -146,8 +173,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -196,8 +222,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -252,8 +277,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -308,8 +332,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -364,8 +387,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -420,8 +442,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -481,8 +502,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
@@ -555,8 +575,7 @@ describe('X12Deserializer deserialize method', () => {
       ],
     };
 
-    const deserializer = new X12Deserializer(input, template);
-    const got = deserializer.deserialize();
+    const got = deserialize(template, input);
 
     assert.deepEqual(got, want);
   });
