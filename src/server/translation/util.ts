@@ -188,6 +188,36 @@ export function registerHelpers(): void {
         return dateFns.format(getDateEnd(period, unit), 'MM/dd/yyyy');
     }
   });
+
+  Handlebars.registerHelper('numberFormat', function (preference: string, precision: string, input: string): string {
+    if (!input) { return ''; }
+
+    const numberInput = Number(input);
+    const numberPrecision = Math.trunc(Number(precision));
+
+    if (!isDotPreference(preference)) { throw new Error(`invalid dot preference '${preference}'`); }
+    if (isNaN(numberPrecision)) { throw new Error(`could not convert precision to number '${precision}'`); }
+    if (!isPrecision(numberPrecision)) { throw new Error(`invalid dot precision. Must be between 0 and 20 inclusive '${precision}'`); }
+    if (isNaN(numberInput)) { throw new Error(`could not convert value to number '${input}'`); }
+
+    const formattedNumber = numberInput.toFixed(numberPrecision).toString();
+
+    return preference === 'dot' ?
+      formattedNumber
+      :
+      formattedNumber.replaceAll('.', '');
+  });
+}
+
+type DotPreference = 'dot' | 'nodot';
+type Precision = number;
+
+function isDotPreference(preference: string): preference is DotPreference {
+  return preference === 'dot' || preference === 'nodot';
+}
+
+function isPrecision(precision: number): precision is Precision {
+  return precision >= 0 && precision <= 20;
 }
 
 type Mode = 'start' | 'end';

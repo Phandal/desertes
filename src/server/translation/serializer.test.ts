@@ -2523,4 +2523,241 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it('numberFormat', async () => {
+    const input = {
+      integer: '444',
+      float: '11.2',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' 2 [integer]}}`,
+            },
+            {
+              name: 'integer without dot',
+              value: `{{numberFormat 'nodot' 2 [integer]}}`,
+            },
+            {
+              name: 'flot with dot',
+              value: `{{numberFormat 'dot' 2 [float]}}`,
+            },
+            {
+              name: 'flot without dot',
+              value: `{{numberFormat 'nodot' 2 [float]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = `444.00*44400*11.20*1120~`;
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('numberFormat with invalid preference', async () => {
+    const input = {
+      integer: '42',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'notapreference' 2 [integer]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: `invalid dot preference 'notapreference'` });
+  });
+
+  it('numberFormat with string precision', async () => {
+    const input = {
+      integer: '42',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' 'help' [integer]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: `could not convert precision to number 'help'` });
+  });
+
+  it('numberFormat with empty input', async () => {
+    const input = {
+      string: '',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' 2 [string]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = '~';
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('numberFormat with over max precision', async () => {
+    const input = {
+      integer: '42',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' 21 [integer]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: `invalid dot precision. Must be between 0 and 20 inclusive '21'` });
+  });
+
+  it('numberFormat with under min precision', async () => {
+    const input = {
+      integer: '42',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' -1 [integer]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: `invalid dot precision. Must be between 0 and 20 inclusive '-1'` });
+  });
+
+  it('numberFormat with invalid input', async () => {
+    const input = {
+      string: 'help',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'integer with dot',
+              value: `{{numberFormat 'dot' 2 [string]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: `could not convert value to number '${input.string}'` });
+  });
 });
