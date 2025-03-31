@@ -1,5 +1,4 @@
 import Handlebars from 'handlebars';
-import { Logger } from '#util/logger.js';
 import { ElementRuleAttribute } from './types.js';
 import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
@@ -39,7 +38,6 @@ export function lengthAttribute(input: string, attr: ElementRuleAttribute['lengt
 }
 
 export function setupLogger(): void {
-  const logger = new Logger(process.stdout, 'DEBUG');
   Handlebars.logger.log = (_level, obj): void => console.log({ msg: `Handlebars Log: ${obj}` });
 }
 
