@@ -1,11 +1,8 @@
 import Handlebars from 'handlebars';
+import { Logger } from '#util/logger.js';
 import { ElementRuleAttribute } from './types.js';
 import * as dateFns from 'date-fns';
-// import {
-//   format as datefnsFormat,
-//   parse as datefnsParse,
-//   sub as datefnsSub,
-// } from 'date-fns';
+import { UTCDate } from '@date-fns/utc';
 
 export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, input: string): string {
   if (!attrs) {
@@ -42,6 +39,7 @@ export function lengthAttribute(input: string, attr: ElementRuleAttribute['lengt
 }
 
 export function setupLogger(): void {
+  const logger = new Logger(process.stdout, 'DEBUG');
   Handlebars.logger.log = (_level, obj): void => console.log({ msg: `Handlebars Log: ${obj}` });
 }
 
@@ -58,7 +56,7 @@ export function registerHelpers(): void {
   Handlebars.registerHelper('dateCompare', function (key: string, operator: string, input: string, options: Handlebars.HelperOptions): string {
     let result;
     const ad = getDateFromKey(key);
-    const bd = new Date(input);
+    const bd = new UTCDate(input);
 
     switch (operator) {
       case '==':
@@ -258,7 +256,7 @@ function getDateEnd(period: Period, unit: Unit): Date {
 }
 
 function getDateStartNext(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.startOfWeek(dateFns.addWeeks(now, 1));
@@ -270,7 +268,7 @@ function getDateStartNext(unit: Unit): Date {
 }
 
 function getDateStartCurrent(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.startOfWeek(now);
@@ -282,7 +280,7 @@ function getDateStartCurrent(unit: Unit): Date {
 }
 
 function getDateStartPrevious(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.startOfWeek(dateFns.subWeeks(now, 1));
@@ -294,7 +292,7 @@ function getDateStartPrevious(unit: Unit): Date {
 }
 
 function getDateEndNext(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.endOfWeek(dateFns.addWeeks(now, 1));
@@ -306,7 +304,7 @@ function getDateEndNext(unit: Unit): Date {
 }
 
 function getDateEndCurrent(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.endOfWeek(now);
@@ -318,7 +316,7 @@ function getDateEndCurrent(unit: Unit): Date {
 }
 
 function getDateEndPrevious(unit: Unit): Date {
-  const now = new Date();
+  const now = new UTCDate();
   switch (unit) {
     case 'week':
       return dateFns.endOfWeek(dateFns.subWeeks(now, 1));
@@ -332,11 +330,11 @@ function getDateEndPrevious(unit: Unit): Date {
 function getDateFromKey(key: string): Date {
   switch (key) {
     case 'lastweek':
-      return dateFns.sub(new Date(), {
+      return dateFns.sub(new UTCDate(), {
         weeks: 1,
       });
     case 'yesterday':
-      return dateFns.sub(new Date(), {
+      return dateFns.sub(new UTCDate(), {
         days: 1,
       });
     default:
@@ -346,13 +344,13 @@ function getDateFromKey(key: string): Date {
 
 function createValidDate(input?: string, inputFormat?: string | unknown): Date {
   if (input === undefined || typeof input !== 'string') {
-    return new Date();
+    return new UTCDate();
   }
 
   if (inputFormat === undefined || typeof inputFormat !== 'string') {
-    return new Date(input);
+    return new UTCDate(input);
   }
-  return dateFns.parse(input, inputFormat, new Date());
+  return dateFns.parse(input, inputFormat, new UTCDate());
 }
 
 function parseSSN(ssn: string): { first: string, second: string, third: string } {
