@@ -2567,6 +2567,50 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
+  it('getDate helper with specified date', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('01/19/2023') });
+
+    const input = {
+      'dateDash': '03-31-2025',
+      'dateSlash': '03/31/2025',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '\n',
+      segmentSeparator: '',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          elements: [
+            {
+              name: 'start_previous_week',
+              value: `{{getDate 'start' 'previous' 'week' [dateDash]}}`,
+            },
+            {
+              name: 'start_previous_month',
+              value: `{{getDate 'start' 'next' 'month' [dateSlash]}}`,
+            },
+          ],
+          children: [],
+        },
+      ],
+    };
+
+    const want = [
+      '03/23/2025',
+      '04/01/2025',
+    ].join('\n');
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
   it('numberFormat', async () => {
     const input = {
       integer: '444',
