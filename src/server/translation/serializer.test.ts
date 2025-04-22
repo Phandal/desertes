@@ -1835,10 +1835,11 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
-  it('compareDate helper', async () => {
+  it('compareDate helper', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('03/03/2025') });
 
     const dateInput = {
-      day: new Date().toString(),
+      day: new Date().toDateString(),
     };
 
     const template: Template = {
@@ -1879,12 +1880,43 @@ describe('Serializer_0_0_1', () => {
               name: 'element_six',
               value: `{{#dateCompare 'lastweek' '>=' day}}1{{else}}0{{/dateCompare}}`,
             },
+	  ],
+        },
+        {
+	  name: 'segment_two',
+	  container: false,
+	  children: [],
+	  elements: [
+	    {
+	      name: 'element_seven',
+	      value: `{{#dateCompare 'today' '>=' day}}1{{else}}0{{/dateCompare}}`,
+	    },
+	    {
+	      name: 'element_eight',
+	      value: `{{#dateCompare 'today' '<=' day}}1{{else}}0{{/dateCompare}}`,
+	    },
+	    {
+	      name: 'element_nine',
+	      value: `{{#dateCompare 'today' '==' day}}1{{else}}0{{/dateCompare}}`,
+	    },
+	    {
+	      name: 'element_ten',
+	      value: `{{#dateCompare 'today' '>' day}}1{{else}}0{{/dateCompare}}`,
+	    },
+	    {
+	      name: 'element_eleven',
+	      value: `{{#dateCompare 'today' '<' day}}1{{else}}0{{/dateCompare}}`,
+	    },
+	    {
+	      name: 'element_twelve',
+	      value: `{{#dateCompare 'today' '!=' day}}1{{else}}0{{/dateCompare}}`,
+	    },
           ],
         },
       ],
     };
 
-    const want = `1*0*0*1*1*0~`;
+    const want = `1*0*0*1*1*0~1*1*1*0*0*0~`;
     const got = await serialize(template, dateInput);
 
     assert.deepEqual(got, want);

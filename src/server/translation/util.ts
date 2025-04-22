@@ -56,24 +56,26 @@ export function registerHelpers(): void {
     const ad = getDateFromKey(key);
     const bd = new UTCDate(input);
 
+    console.log(`${ad} | ${bd}`);
+
     switch (operator) {
       case '==':
-        result = ad === bd;
+        result = (dateFns.compareAsc(ad, bd) === 0);
         break;
       case '!=':
-        result = ad !== bd;
+        result = (dateFns.compareAsc(ad, bd) !== 0);
         break;
       case '<=':
-        result = ad <= bd;
+        result = (dateFns.compareAsc(ad, bd) <= 0);
         break;
       case '>=':
-        result = ad >= bd;
+        result = (dateFns.compareAsc(ad, bd) >= 0);
         break;
       case '<':
-        result = ad < bd;
+        result = (dateFns.compareAsc(ad, bd) < 0);
         break;
       case '>':
-        result = ad > bd;
+        result = (dateFns.compareAsc(ad, bd) > 0);
         break;
       default:
         throw new Error(`invalid date compare operator: ${operator}`);
@@ -172,6 +174,7 @@ export function registerHelpers(): void {
   });
 
   Handlebars.registerHelper('getDate', function (mode: string, period: string, unit: string, input?: string, inputFormat?: string): string {
+
     if (!isMode(mode)) { throw new Error(`invalid mode '${mode}'`); }
     if (!isPeriod(period)) { throw new Error(`invalid period '${period}'`); }
     if (!isUnit(unit)) { throw new Error(`invalid unit '${unit}'`); }
@@ -333,6 +336,8 @@ function getDateFromKey(key: string): Date {
       return dateFns.sub(new UTCDate(), {
         days: 1,
       });
+    case 'today':
+      return new UTCDate();
     default:
       throw new Error(`invalid date compare key: ${key}`);
   }
