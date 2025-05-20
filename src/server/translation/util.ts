@@ -56,7 +56,7 @@ export function registerHelpers(): void {
     const ad = getDateFromKey(key);
     const bd = new UTCDate(input);
 
-    console.log(`${ad} | ${bd}`);
+    // console.log(`${ad} | ${bd}`);
 
     switch (operator) {
       case '==':
@@ -209,6 +209,37 @@ export function registerHelpers(): void {
       formattedNumber
       :
       formattedNumber.replaceAll('.', '');
+  });
+
+  Handlebars.registerHelper('add', function (a: string, b: string): number {
+    const aNum = getValidNumberOrZero(a);
+    const bNum = getValidNumberOrZero(b);
+
+    return aNum + bNum;
+  });
+
+  Handlebars.registerHelper('sub', function (a: string, b: string): number {
+    const aNum = getValidNumberOrZero(a);
+    const bNum = getValidNumberOrZero(b);
+
+    return aNum - bNum;
+  });
+
+  Handlebars.registerHelper('mul', function (a: string, b: string): number {
+    const aNum = getValidNumberOrZero(a);
+    const bNum = getValidNumberOrZero(b);
+
+    return aNum * bNum;
+  });
+
+  Handlebars.registerHelper('div', function (a: string, b: string): number {
+    const aNum = getValidNumberOrZero(a);
+    const bNum = getValidNumberOrZero(b);
+    if (bNum === 0) {
+      return 0;
+    }
+
+    return aNum / bNum;
   });
 }
 
@@ -369,5 +400,15 @@ function parseSSN(ssn: string): { first: string, second: string, third: string }
     };
   } else {
     throw new Error(`invalid ssn format '${ssn.replaceAll(/[a-zA-Z0-9]/g, 'X')}'`);
+  }
+}
+
+export function getValidNumberOrZero(a: unknown): number {
+  const testNum = Number(a);
+
+  if (isNaN(testNum) || testNum === undefined || testNum === null) {
+    return 0;
+  } else {
+    return testNum;
   }
 }

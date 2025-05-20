@@ -1880,37 +1880,37 @@ describe('Serializer_0_0_1', () => {
               name: 'element_six',
               value: `{{#dateCompare 'lastweek' '>=' day}}1{{else}}0{{/dateCompare}}`,
             },
-	  ],
+          ],
         },
         {
-	  name: 'segment_two',
-	  container: false,
-	  children: [],
-	  elements: [
-	    {
-	      name: 'element_seven',
-	      value: `{{#dateCompare 'today' '>=' day}}1{{else}}0{{/dateCompare}}`,
-	    },
-	    {
-	      name: 'element_eight',
-	      value: `{{#dateCompare 'today' '<=' day}}1{{else}}0{{/dateCompare}}`,
-	    },
-	    {
-	      name: 'element_nine',
-	      value: `{{#dateCompare 'today' '==' day}}1{{else}}0{{/dateCompare}}`,
-	    },
-	    {
-	      name: 'element_ten',
-	      value: `{{#dateCompare 'today' '>' day}}1{{else}}0{{/dateCompare}}`,
-	    },
-	    {
-	      name: 'element_eleven',
-	      value: `{{#dateCompare 'today' '<' day}}1{{else}}0{{/dateCompare}}`,
-	    },
-	    {
-	      name: 'element_twelve',
-	      value: `{{#dateCompare 'today' '!=' day}}1{{else}}0{{/dateCompare}}`,
-	    },
+          name: 'segment_two',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'element_seven',
+              value: `{{#dateCompare 'today' '>=' day}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_eight',
+              value: `{{#dateCompare 'today' '<=' day}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_nine',
+              value: `{{#dateCompare 'today' '==' day}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_ten',
+              value: `{{#dateCompare 'today' '>' day}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_eleven',
+              value: `{{#dateCompare 'today' '<' day}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_twelve',
+              value: `{{#dateCompare 'today' '!=' day}}1{{else}}0{{/dateCompare}}`,
+            },
           ],
         },
       ],
@@ -2299,7 +2299,7 @@ describe('Serializer_0_0_1', () => {
     await assert.rejects(async () => await serialize(templateInvalidKey, {}), { message: 'invalid ssn format key \'key\'' });
   });
 
-  it('should be able to access the _PARENT object from in  repetition', async () => {
+  it('should be able to access the _PARENT object from in repetition', async () => {
     const template: Template = {
       $schema: '',
       name: '',
@@ -2354,6 +2354,104 @@ describe('Serializer_0_0_1', () => {
     };
     const want = 'firstname1*lastname~friend11*lastname1*firstname~friend12*lastname1*firstname~firstname2*lastname~friend21*lastname2*firstname~friend22*lastname2*firstname~';
 
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to access the _PARENT object from in the repetition filter', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          repetition: {
+            property: 'members',
+          },
+          elements: [
+            {
+              name: 'member_first_name',
+              value: '{{firstname}}',
+            },
+          ],
+          children: [
+            {
+              name: 'child_segment',
+              container: false,
+              repetition: {
+                property: 'friends',
+                filter: `{{#compare _PARENT.lastname '==' 'lastname1'}}true{{/compare}}`,
+              },
+              elements: [
+                {
+                  name: 'friend',
+                  value: '{{name}}',
+                },
+              ],
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `firstname1~friend11~friend12~firstname2~`;
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('should be able to access the _PARENT object from in the filter expression', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: ':',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'first_segment',
+          container: false,
+          repetition: {
+            property: 'members',
+          },
+          elements: [
+            {
+              name: 'member_first_name',
+              value: '{{firstname}}',
+            },
+          ],
+          children: [
+            {
+              name: 'child_segment',
+              container: false,
+              filter: {
+                property: 'friends',
+                expression: `{{#compare _PARENT.lastname '==' 'lastname1'}}true{{/compare}}`,
+              },
+              elements: [
+                {
+                  name: 'friend',
+                  value: '{{#each friends}}{{name}}{{/each}}',
+                },
+              ],
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `firstname1~friend11friend12~firstname2~~`;
     const got = await serialize(template, input);
 
     assert.deepEqual(got, want);
@@ -2878,5 +2976,111 @@ describe('Serializer_0_0_1', () => {
     };
 
     await assert.rejects(async () => await serialize(template, input), { message: `could not convert value to number '${input.string}'` });
+  });
+
+  it('arithmetic helpers', async () => {
+    // NOTE: divide by zero returns 0
+
+    const input = {
+      zero: 0,
+      one: 1,
+      two: 2,
+      three: 3,
+      numberString: '4',
+      float: '0.1',
+      undefined: undefined,
+      null: null,
+      emptystring: '',
+      invalidString: 'string',
+      nan: NaN,
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Arithmetic_Test',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'add',
+              value: '{{add one two}}',
+            },
+            {
+              name: 'subtract',
+              value: '{{sub three one}}',
+            },
+            {
+              name: 'multiply',
+              value: '{{mul two three}}',
+            },
+            {
+              name: 'divide',
+              value: '{{div two one}}',
+            },
+            {
+              name: 'add_float',
+              value: '{{add one float}}',
+            },
+            {
+              name: 'subtract_float',
+              value: '{{sub three float}}',
+            },
+            {
+              name: 'multiply_float',
+              value: '{{mul two float}}',
+            },
+            {
+              name: 'divide_float',
+              value: '{{div two float}}',
+            },
+            {
+              name: 'divide_zero',
+              value: '{{div two zero}}',
+            },
+            {
+              name: 'undefined',
+              value: '{{add 1 undefined}}',
+            },
+            {
+              name: 'null',
+              value: '{{sub 3 null}}',
+            },
+            {
+              name: 'divide_by_undefined',
+              value: '{{div 3 undefined}}',
+            },
+            {
+              name: 'numberString',
+              value: '{{add 1 numberString}}',
+            },
+            {
+              name: 'invalidString',
+              value: '{{sub 1 invalidString}}',
+            },
+            {
+              name: 'emptyString',
+              value: '{{mul 3 emptyString}}',
+            },
+            {
+              name: 'NaN',
+              value: '{{sub numberString nan}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = '3*2*6*2*1.1*2.9*0.2*20*0*1*3*0*5*1*0*4~';
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
   });
 });
