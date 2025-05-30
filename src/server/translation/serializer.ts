@@ -87,9 +87,13 @@ export class Serializer_0_0_1 implements Serializer {
           const filterExpression = this.filterFactory(filter.expression);
           const filterObject = input[filter.property];
           let filteredObject = filterObject;
+          const parentInput = filterObject !== undefined ? this.getParentInput(filter.property, input) : undefined;
 
           if (Array.isArray(filterObject)) {
             filteredObject = filterObject.filter((filterField) => {
+              if (filterField !== undefined && typeof filterField === 'object') {
+                filterField._PARENT = parentInput;
+              }
               return filterExpression(filterField) !== '';
             });
           }

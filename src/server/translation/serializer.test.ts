@@ -37,9 +37,11 @@ const input = {
       friends: [
         {
           name: 'friend11',
+          keep: true,
         },
         {
           name: 'friend12',
+          keep: false,
         },
       ],
     },
@@ -50,9 +52,11 @@ const input = {
       friends: [
         {
           name: 'friend21',
+          keep: true,
         },
         {
           name: 'friend22',
+          keep: true,
         },
       ],
     },
@@ -2410,6 +2414,60 @@ describe('Serializer_0_0_1', () => {
   });
 
   it('should be able to access the _PARENT object from in the filter expression', async () => {
+    // const template: Template = {
+    //   $schema: '',
+    //   name: '',
+    //   version: '0.0.1',
+    //   elementSeparator: '*',
+    //   segmentSeparator: '~',
+    //   componentSeparator: ':',
+    //   repetitionSeparator: '!',
+    //   rules: [
+    //     {
+    //       name: 'first_segment',
+    //       container: false,
+    //       filter: {
+    //         property: 'members',
+    //         expression: `{{#compare _PARENT.singleMember.filterLastName '==' lastname}}1{{/compare}}`,
+    //       },
+    //       elements: [
+    //         {
+    //           name: 'member_first_name',
+    //           value: '{{#each members}}{{firstname}}{{/each}}',
+    //         },
+    //       ],
+    //       children: [
+    //         {
+    //           name: 'container_segment',
+    //           container: true,
+    //           repetition: {
+    //             property: 'members',
+    //           },
+    //           children: [
+    //             {
+    //               name: 'second_segment',
+    //               container: false,
+    //               filter: {
+    //                 property: 'friends',
+    //                 expression: `{{#compare _PARENT.firstname '==' 'firstname1'}}1{{/compare}}`,
+    //               },
+    //               elements: [
+    //                 {
+    //                   name: 'friends',
+    //                   value: '{{#each friends}}{{name}}{{/each}}',
+    //                 },
+    //               ],
+    //               children: [],
+    //             },
+    //           ],
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // };
+
+    // const want = `firstname1~friend11friend12~`;
+
     const template: Template = {
       $schema: '',
       name: '',
@@ -2420,36 +2478,36 @@ describe('Serializer_0_0_1', () => {
       repetitionSeparator: '!',
       rules: [
         {
-          name: 'first_segment',
-          container: false,
-          filter: {
+          name: 'container_segment',
+          container: true,
+          repetition: {
             property: 'members',
-            expression: `{{#compare _PARENT.singleMember.filterLastName '==' lastname}}1{{/compare}}`,
           },
-          elements: [
-            {
-              name: 'member_first_name',
-              value: '{{#each members}}{{firstname}}{{/each}}',
-            },
-          ],
           children: [
             {
-              name: 'container_segment',
-              container: true,
-              repetition: {
-                property: 'members',
+              name: 'first_segment',
+              container: false,
+              filter: {
+                property: 'friends',
+                expression: `{{#if keep}}1{{/if}}`,
               },
+              elements: [
+                {
+                  name: 'member',
+                  value: '{{#each friends}}{{name}}{{/each}}',
+                },
+              ],
               children: [
                 {
                   name: 'second_segment',
                   container: false,
                   filter: {
                     property: 'friends',
-                    expression: `{{#compare _PARENT.firstname '==' 'firstname1'}}1{{/compare}}`,
+                    expression: `{{#compare _PARENT.lastname '==' 'lastname1'}}1{{/compare}}`,
                   },
                   elements: [
                     {
-                      name: 'friends',
+                      name: 'friend',
                       value: '{{#each friends}}{{name}}{{/each}}',
                     },
                   ],
@@ -2462,7 +2520,7 @@ describe('Serializer_0_0_1', () => {
       ],
     };
 
-    const want = `firstname1~friend11friend12~`;
+    const want = `friend11~friend11~friend21friend22~~`;
     const got = await serialize(template, input);
 
     assert.deepEqual(got, want);
