@@ -26,6 +26,7 @@ const input = {
   singleMember: {
     lastname: 'lastname',
     firstname: 'firstname',
+    filterLastName: 'lastname1',
     nicknames: ['nick1', 'nick2', 'nick3'],
   },
   members: [
@@ -2421,37 +2422,47 @@ describe('Serializer_0_0_1', () => {
         {
           name: 'first_segment',
           container: false,
-          repetition: {
+          filter: {
             property: 'members',
+            expression: `{{#compare _PARENT.singleMember.filterLastName '==' lastname}}1{{/compare}}`,
           },
           elements: [
             {
               name: 'member_first_name',
-              value: '{{firstname}}',
+              value: '{{#each members}}{{firstname}}{{/each}}',
             },
           ],
           children: [
             {
-              name: 'child_segment',
-              container: false,
-              filter: {
-                property: 'friends',
-                expression: `{{#compare _PARENT.lastname '==' 'lastname1'}}true{{/compare}}`,
+              name: 'container_segment',
+              container: true,
+              repetition: {
+                property: 'members',
               },
-              elements: [
+              children: [
                 {
-                  name: 'friend',
-                  value: '{{#each friends}}{{name}}{{/each}}',
+                  name: 'second_segment',
+                  container: false,
+                  filter: {
+                    property: 'friends',
+                    expression: `{{#compare _PARENT.firstname '==' 'firstname1'}}1{{/compare}}`,
+                  },
+                  elements: [
+                    {
+                      name: 'friends',
+                      value: '{{#each friends}}{{name}}{{/each}}',
+                    },
+                  ],
+                  children: [],
                 },
               ],
-              children: [],
             },
           ],
         },
       ],
     };
 
-    const want = `firstname1~friend11friend12~firstname2~~`;
+    const want = `firstname1~friend11friend12~`;
     const got = await serialize(template, input);
 
     assert.deepEqual(got, want);
