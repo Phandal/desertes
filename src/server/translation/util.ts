@@ -20,6 +20,7 @@ export function lengthAttribute(input: string, attr: ElementRuleAttribute['lengt
   const max = attr.max;
   const min = attr.min;
   const padding = attr.padding || ' ';
+  const align = attr.align || 'left';
 
   if (max < min) {
     return input;
@@ -31,7 +32,11 @@ export function lengthAttribute(input: string, attr: ElementRuleAttribute['lengt
   }
 
   if (output.length < min) {
-    output = output.padEnd(min, padding);
+    if (align === 'left') {
+      output = output.padEnd(min, padding);
+    } else {
+      output = output.padStart(min, padding);
+    }
   }
 
   return output;

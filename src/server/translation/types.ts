@@ -62,6 +62,7 @@ export type LengthAttribute = {
   min: number;
   max: number;
   padding?: string;
+  align?: 'left' | 'right';
 }
 
 export interface Serializer {

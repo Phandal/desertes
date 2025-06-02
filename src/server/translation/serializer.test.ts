@@ -1074,6 +1074,145 @@ describe('Serializer_0_0_1', () => {
     }
   });
 
+  it('length attribute with right align', async () => {
+    const templates: Template[] = [
+      {
+        $schema: '',
+        name: '',
+        version: '0.0.1',
+        elementSeparator: '*',
+        segmentSeparator: '~',
+        componentSeparator: ':',
+        repetitionSeparator: '!',
+        rules: [
+          {
+            name: 'first_segment',
+            container: false,
+            elements: [
+              {
+                name: 'first_name',
+                value: '{{singleMember.firstname}}',
+                attributes: {
+                  length: {
+                    min: 0,
+                    max: 5,
+                    align: 'right',
+                  },
+                },
+              },
+            ],
+            children: [],
+          },
+        ],
+      },
+      {
+        $schema: '',
+        name: '',
+        version: '0.0.1',
+        elementSeparator: '*',
+        segmentSeparator: '~',
+        componentSeparator: ':',
+        repetitionSeparator: '!',
+        rules: [
+          {
+            name: 'first_segment',
+            container: false,
+            elements: [
+              {
+                name: 'first_name',
+                value: '{{singleMember.firstname}}',
+                attributes: {
+                  length: {
+                    min: 0,
+                    max: 15,
+                    align: 'right',
+                  },
+                },
+              },
+            ],
+            children: [],
+          },
+        ],
+      },
+      {
+        $schema: '',
+        name: '',
+        version: '0.0.1',
+        elementSeparator: '*',
+        segmentSeparator: '~',
+        componentSeparator: ':',
+        repetitionSeparator: '!',
+        rules: [
+          {
+            name: 'first_segment',
+            container: false,
+            elements: [
+              {
+                name: 'first_name',
+                value: '{{singleMember.firstname}}',
+                attributes: {
+                  length: {
+                    min: 15,
+                    max: 15,
+                    padding: '_',
+                    align: 'right',
+                  },
+                },
+              },
+            ],
+            children: [],
+          },
+        ],
+      },
+      {
+        $schema: '',
+        name: '',
+        version: '0.0.1',
+        elementSeparator: '*',
+        segmentSeparator: '~',
+        componentSeparator: ':',
+        repetitionSeparator: '!',
+        rules: [
+          {
+            name: 'first_segment',
+            container: false,
+            elements: [
+              {
+                name: 'first_name',
+                value: '{{singleMember.firstname}}',
+                attributes: {
+                  length: {
+                    min: 15,
+                    max: 20,
+                    padding: '_',
+                    align: 'right',
+                  },
+                },
+              },
+            ],
+            children: [],
+          },
+        ],
+      },
+    ];
+
+    const wants = [
+      'first~',
+      'firstname~',
+      '______firstname~',
+      '______firstname~',
+    ];
+
+    for (let ii = 0; ii < templates.length; ++ii) {
+      const template = templates[ii];
+      const got = await serialize(template, input);
+
+      const want = wants[ii];
+
+      assert.deepEqual(got, want);
+    }
+  });
+
   it('ignore segment property', async () => {
     const template: Template = {
       $schema: '',
