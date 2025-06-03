@@ -216,6 +216,30 @@ export function registerHelpers(): void {
       formattedNumber.replaceAll('.', '');
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Handlebars.registerHelper('sum', function (arr: any, property?: string): number {
+    if (!Handlebars.Utils.isArray(arr)) {
+      throw new Error(`cannot reduce non array object`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const loopObject = <any[]>arr;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return loopObject.reduce((acc: number, obj: any) => {
+      let value = Number(obj);
+      if (typeof property === 'string' && typeof obj === 'object') {
+        value = Number(obj[property]);
+      }
+
+      if (isNaN(value) || value === undefined || value === null) {
+        return acc;
+      } else {
+        return acc + value;
+      }
+    }, 0);
+  });
+
   Handlebars.registerHelper('add', function (a: string, b: string): number {
     const aNum = getValidNumberOrZero(a);
     const bNum = getValidNumberOrZero(b);

@@ -3291,4 +3291,127 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it('sum with numbers, strings, and objects', async () => {
+    const input = {
+      nums: [1, 2, 3, 4, '5', -6],
+      objNums: [
+        {
+          v: 1,
+        },
+        {
+          v: 2,
+        },
+        {
+          v: 3,
+        },
+        {
+          v: 4,
+        },
+        {
+          v: '5',
+        },
+        {
+          v: -6,
+        },
+      ],
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Sum Test',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'sum',
+              value: '{{sum nums}}',
+            },
+            {
+              name: 'sum objs',
+              value: `{{sum objNums 'v'}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = '9*9~';
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('sum with non array', async () => {
+    const input = {
+      nums: {},
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Sum Test',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'sum',
+              value: '{{sum nums}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    await assert.rejects(async () => await serialize(template, input), { message: 'cannot reduce non array object' });
+  });
+
+  it('sum with undefined and null', async () => {
+    const input = {
+      nums: [1, null, 3, undefined, 5],
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Sum Test',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'sum',
+              value: '{{sum nums}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = '9~';
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
 });
