@@ -47,12 +47,12 @@ export function setupLogger(): void {
 }
 
 export function registerHelpers(): void {
-  Handlebars.registerHelper('dateFormat', function (format: string, input?: string, inputFormat?: string | unknown): Handlebars.SafeString {
+  Handlebars.registerHelper('dateFormat', function (format: string, input?: string, inputFormat?: string | unknown): string {
     if (typeof input === 'string' && input.length === 0) {
-      return new Handlebars.SafeString('');
+      return '';
     } else {
       const dateStr = createValidDate(input, inputFormat);
-      return new Handlebars.SafeString(dateFns.format(dateStr, format));
+      return dateFns.format(dateStr, format);
     }
   });
 

@@ -2127,6 +2127,51 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
+  it('compareDate helper with dateFormat', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('03/03/2025') });
+    const today = new Date();
+    const tomorrow = new Date(new Date().setDate(today.getDate() + 1));
+    const yesterday = new Date(new Date().setDate(today.getDate() - 1));
+
+    const dateInput = {
+      today: today.toDateString(),
+      tomorrow: tomorrow.toDateString(),
+      yesterday: yesterday.toDateString(),
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'segment_one',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'element_one',
+              value: `{{#dateCompare today '==' (dateFormat 'MM/dd/yyyy' today)}}1{{else}}0{{/dateCompare}}`,
+            },
+            {
+              name: 'element_two',
+              value: `{{#dateCompare today '!=' (dateFormat 'MM/dd/yyyy' today)}}1{{else}}0{{/dateCompare}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `1*0~`;
+    const got = await serialize(template, dateInput);
+
+    assert.deepEqual(got, want);
+  });
+
   it('dateFormat helper', async (context) => {
     context.mock.timers.enable({ apis: ['Date'] });
 
