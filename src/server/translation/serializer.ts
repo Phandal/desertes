@@ -153,7 +153,7 @@ export class Serializer_0_0_1 implements Serializer {
     const elements: string[] = [];
     elementRules.forEach((element) => {
       const compile = Handlebars.compile(element.value);
-      const output = util.postCompileAttributes(element.attributes, compile(input));
+      const output = util.postCompileAttributes(element.attributes, compile(input), input);
       elements.push(output);
     });
 

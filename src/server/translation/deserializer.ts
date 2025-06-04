@@ -122,9 +122,10 @@ export class Deserializer_0_0_1 implements Deserializer {
       return undefined;
     }
 
+    const compileInput = { _v: element.value };
     const compile = Handlebars.compile(rule.value);
-    const input = compile({ _v: element.value });
-    return util.postCompileAttributes(rule.attributes, input);
+    const input = compile(compileInput);
+    return util.postCompileAttributes(rule.attributes, input, compileInput);
   }
 
   private addSegment(obj: EDIObject, header: string, seg: EDISegment): EDIObject {

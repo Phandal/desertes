@@ -3,24 +3,33 @@ import { ElementRuleAttribute } from './types.js';
 import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
 
-export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, input: string): string {
+export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, input: string, compileInput: Record<string, unknown>): string {
   if (!attrs) {
     return input;
   }
   let output = input;
 
   if (attrs.length) {
-    output = lengthAttribute(output, attrs.length);
+    output = lengthAttribute(output, attrs.length, compileInput);
   }
 
   return output;
 }
 
-export function lengthAttribute(input: string, attr: ElementRuleAttribute['length']): string {
+export function lengthAttribute(input: string, attr: ElementRuleAttribute['length'], compileInput: Record<string, unknown>): string {
   const max = attr.max;
   const min = attr.min;
-  const padding = attr.padding || ' ';
   const align = attr.align || 'left';
+
+  // Setup Padding with a default of ' '
+  let padding;
+  if (attr.padding) {
+    const paddingCompiler = Handlebars.compile(attr.padding);
+    padding = paddingCompiler(compileInput);
+  }
+  if (padding === '') {
+    padding = ' ';
+  }
 
   if (max < min) {
     return input;

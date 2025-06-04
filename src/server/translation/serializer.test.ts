@@ -3520,4 +3520,64 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it('padding property in the length attribute works with handlebars', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '>',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'Segment_One',
+          container: false,
+          repetition: {
+            property: 'members',
+          },
+          children: [],
+          elements: [
+            {
+              name: 'element_without_padding',
+              value: '',
+              attributes: {
+                length: {
+                  min: 2,
+                  max: 2,
+                },
+              },
+            },
+            {
+              name: 'element_with_padding_expression',
+              value: '',
+              attributes: {
+                length: {
+                  min: 2,
+                  max: 2,
+                  padding: `{{#compare lastname '==' 'lastname1'}}1{{/compare}}`,
+                },
+              },
+            },
+            {
+              name: 'element_with_padding_charater',
+              value: '',
+              attributes: {
+                length: {
+                  min: 2,
+                  max: 2,
+                  padding: '0',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const want = '  *11*00~  *  *00~';
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
 });
