@@ -399,7 +399,8 @@ function getDateFromKey(key: string): Date {
     case 'today':
       return new UTCDate();
     default:
-      throw new Error(`invalid date compare key: ${key}`);
+      return new UTCDate(key);
+    // throw new Error(`invalid date compare key: ${key}`);
   }
 }
 
