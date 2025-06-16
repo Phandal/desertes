@@ -279,6 +279,18 @@ export function registerHelpers(): void {
 
     return aNum / bNum;
   });
+
+  Handlebars.registerHelper('and', function (a: unknown, b: unknown): boolean {
+    return (!!a && !!b);
+  });
+
+  Handlebars.registerHelper('or', function (a: unknown, b: unknown): boolean {
+    return (!!a || !!b);
+  });
+
+  Handlebars.registerHelper('not', function (a: unknown): boolean {
+    return (!a);
+  });
 }
 
 type DotPreference = 'dot' | 'nodot';

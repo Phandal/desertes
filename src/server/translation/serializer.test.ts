@@ -3580,4 +3580,84 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it('logical inline helpers', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '>',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'AND_SEGMENT',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'AND_WORKING',
+              value: '{{#if (and true true)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'AND_FAIL_LEFT',
+              value: '{{#if (and false true)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'AND_FAIL_RIGHT',
+              value: '{{#if (and true false)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'AND_FAIL',
+              value: '{{#if (and false false)}}1{{else}}0{{/if}}',
+            },
+          ],
+        },
+        {
+          name: 'OR_SEGMENT',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'OR_WORKING',
+              value: '{{#if (or true true)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'OR_PASS_LEFT',
+              value: '{{#if (or true false)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'OR_PASS_RIGHT',
+              value: '{{#if (or false true)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'OR_FAIL',
+              value: '{{#if (or false false)}}1{{else}}0{{/if}}',
+            },
+          ],
+        },
+        {
+          name: 'NOT_SEGMENT',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'NOT_FALSE',
+              value: '{{#if (not true)}}1{{else}}0{{/if}}',
+            },
+            {
+              name: 'NOT_TRUE',
+              value: '{{#if (not false)}}1{{else}}0{{/if}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `1*0*0*0~1*1*1*0~0*1~`;
+    const got = await serialize(template, {});
+
+    assert.deepEqual(got, want);
+  });
 });
