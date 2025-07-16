@@ -206,6 +206,17 @@ export function registerHelpers(): void {
     }
   });
 
+  Handlebars.registerHelper('getDayOfMonth', function (day: string, input?: string, inputFormat?: string): string {
+    const dayIndex = Number(day);
+
+    if (isNaN(dayIndex) || dayIndex <= 0 || dayIndex > 31) {
+      throw new Error(`invalid dayOfMonth index '${day}'`);
+    }
+
+    const dateStr = createValidDate(input, inputFormat);
+    return dateFns.format(dateFns.setDate(dateStr, dayIndex), 'MM/dd/yyyy');
+  });
+
   Handlebars.registerHelper('numberFormat', function (preference: string, precision: string, input: string): string {
     if (!input) { return ''; }
 

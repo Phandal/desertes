@@ -3660,4 +3660,67 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it.only('getDayOfMonth helper', async (context) => {
+    context.mock.timers.enable({ apis: ['Date'], now: new Date('03/03/2025') });
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '>',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'getDayOfMonth',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: '15',
+              value: '{{getDayOfMonth 15}}',
+            },
+            {
+              name: '2',
+              value: '{{getDayOfMonth 2}}',
+            },
+            {
+              name: '29',
+              value: '{{getDayOfMonth 29}}',
+            },
+          ],
+        },
+        {
+          name: 'getDayOfMonth with inputDate',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: '15',
+              value: `{{getDayOfMonth 15 '04/25/1999'}}`,
+            },
+            {
+              name: '2',
+              value: `{{getDayOfMonth 2 '04/25/1999'}}`,
+            },
+            {
+              name: '29',
+              value: `{{getDayOfMonth 29 '04/25/1999'}}`,
+            },
+            {
+              name: '14',
+              value: `{{getDayOfMonth 14 '25/04/1999' 'dd/MM/yyyy'}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `03/15/2025*03/02/2025*03/29/2025~04/15/1999*04/02/1999*04/29/1999*04/14/1999~`;
+    const got = await serialize(template, {});
+
+    assert.deepEqual(got, want);
+  });
 });
