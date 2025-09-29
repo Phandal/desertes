@@ -10,19 +10,21 @@ SerializerFactory.registerSerializer(new Serializer_0_0_1());
 class SerializerStub implements Serializer {
   readonly version = '0.0.0';
 
-  async serialize(_stream: PassThrough, _input: Record<string, unknown>, _template: Template): Promise<Readable> {
+  async serialize(_stream: PassThrough, _today: string, _input: Record<string, unknown>, _template: Template): Promise<Readable> {
     return Readable.from('');
   }
 }
 
 async function serialize(template: Template, input: Record<string, unknown>): Promise<string> {
+  const today = new Date().toISOString();
   const serializer = SerializerFactory.getSerializer(template.version);
   const stream = new PassThrough();
-  await serializer.serialize(stream, input, template);
+  await serializer.serialize(stream, today, input, template);
   return (await streamToBuffer(stream)).toString('utf-8');
 }
 
 const input = {
+  csvfield: 'before,after',
   singleMember: {
     lastname: 'lastname',
     firstname: 'firstname',
@@ -3661,7 +3663,7 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
-  it.only('getDayOfMonth helper', async (context) => {
+  it('getDayOfMonth helper', async (context) => {
     context.mock.timers.enable({ apis: ['Date'], now: new Date('03/03/2025') });
 
     const template: Template = {
@@ -3720,6 +3722,88 @@ describe('Serializer_0_0_1', () => {
 
     const want = `03/15/2025*03/02/2025*03/29/2025~04/15/1999*04/02/1999*04/29/1999*04/14/1999~`;
     const got = await serialize(template, {});
+
+    assert.deepEqual(got, want);
+  });
+
+  it('repeatable dates', async (context) => {
+    // context.mock.timers.enable({ apis: ['Date'], now: new Date('09/15/2025 00:00:00') });
+
+    context.mock.timers.enable({ apis: ['Date'], now: new Date(Date.UTC(2025, 8, 15, 0, 0, 0)) });
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '>',
+      repetitionSeparator: '!',
+      rules: [
+        {
+          name: 'date',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'date',
+              value: '{{__TODAY}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = `2025-09-15T00:00:00.000Z~`;
+    const got = await serialize(template, {});
+
+    assert.deepEqual(got, want);
+  });
+
+  it('quoted attributes csv escapes elements', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: '',
+      repetitionSeparator: '',
+      rules: [
+        {
+          name: 'test segment',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'non-escaped',
+              value: '{{{csvfield}}}',
+            },
+            {
+              name: 'escaped',
+              value: '{{{csvfield}}}',
+              attributes: {
+                quoted: true,
+              },
+            },
+            {
+              name: 'escaped with length',
+              value: '{{{csvfield}}}',
+              attributes: {
+                length: {
+                  min: 0,
+                  max: 10,
+                },
+                quoted: true,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const got = await serialize(template, input);
+    const want = 'before,after,"before,after","before,a"\n';
 
     assert.deepEqual(got, want);
   });

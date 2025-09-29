@@ -41,16 +41,20 @@ export class Serializer_0_0_1 implements Serializer {
     util.registerHelpers();
   }
 
-  public async serialize(stream: PassThrough, input: Record<string, unknown>, template: Template): Promise<Readable> {
+  public async serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
     this.template = template;
-    this.serializeSegments(this.template.rules, input, stream);
+    this.serializeSegments(this.template.rules, today, input, stream);
     stream.end();
     return stream;
   }
 
-  private _serializeSegments(segments: SegmentRule[] | undefined, input: Record<string, unknown>, stream: Writable): Thunk<number> {
+  private _serializeSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>, stream: Writable): Thunk<number> {
     if (!segments) {
       return 0;
+    }
+
+    if (typeof input === 'object') {
+      input.__TODAY = today;
     }
 
     return (): number => {
@@ -73,10 +77,10 @@ export class Serializer_0_0_1 implements Serializer {
             if (filterExpression(input) === '') { continue; }; // Allow for filtering in the template
 
             if (segment.container) {
-              segmentCount += this.serializeSegments(segment.children, input, stream);
+              segmentCount += this.serializeSegments(segment.children, today, input, stream);
             } else {
               this.serializeElements(segment.elements, input, segment.trim, stream);
-              segmentCount += this.serializeSegments(segment.children, input, stream);
+              segmentCount += this.serializeSegments(segment.children, today, input, stream);
               segmentCount += this.updateSegmentCount(segment);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
@@ -101,10 +105,10 @@ export class Serializer_0_0_1 implements Serializer {
           new_input[filter.property] = filteredObject;
 
           if (segment.container) {
-            segmentCount += this.serializeSegments(segment.children, new_input, stream);
+            segmentCount += this.serializeSegments(segment.children, today, new_input, stream);
           } else {
             this.serializeElements(segment.elements, new_input, segment.trim, stream);
-            segmentCount += this.serializeSegments(segment.children, new_input, stream);
+            segmentCount += this.serializeSegments(segment.children, today, new_input, stream);
             segmentCount += this.updateSegmentCount(segment);
             this.serializeCloseRule(segment.closeRule, new_input, segmentCount, stream);
           }
@@ -113,20 +117,20 @@ export class Serializer_0_0_1 implements Serializer {
 
           if (filterExpression(input) !== '') {
             if (segment.container) {
-              segmentCount += this.serializeSegments(segment.children, input, stream);
+              segmentCount += this.serializeSegments(segment.children, today, input, stream);
             } else {
               this.serializeElements(segment.elements, input, segment.trim, stream);
-              segmentCount += this.serializeSegments(segment.children, input, stream);
+              segmentCount += this.serializeSegments(segment.children, today, input, stream);
               segmentCount += this.updateSegmentCount(segment);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
         } else {
           if (segment.container) {
-            segmentCount += this.serializeSegments(segment.children, input, stream);
+            segmentCount += this.serializeSegments(segment.children, today, input, stream);
           } else {
             this.serializeElements(segment.elements, input, segment.trim, stream);
-            segmentCount += this.serializeSegments(segment.children, input, stream);
+            segmentCount += this.serializeSegments(segment.children, today, input, stream);
             segmentCount += this.updateSegmentCount(segment);
             this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }

@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { ElementRuleAttribute } from './types.js';
+import { ElementRuleAttribute, LengthAttribute } from './types.js';
 import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
 
@@ -10,14 +10,18 @@ export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, i
   let output = input;
 
   if (attrs.length) {
-    output = lengthAttribute(output, attrs.length, compileInput);
+    output = lengthAttribute(output, attrs.length, attrs.quoted, compileInput);
+  }
+
+  if (attrs.quoted) {
+    output = quoteAttribute(output);
   }
 
   return output;
 }
 
-export function lengthAttribute(input: string, attr: ElementRuleAttribute['length'], compileInput: Record<string, unknown>): string {
-  const max = attr.max;
+export function lengthAttribute(input: string, attr: LengthAttribute, quoted: boolean | undefined, compileInput: Record<string, unknown>): string {
+  const max = quoted ? attr.max - 2 : attr.max; // Making room for double quotes
   const min = attr.min;
   const align = attr.align || 'left';
 
@@ -49,6 +53,10 @@ export function lengthAttribute(input: string, attr: ElementRuleAttribute['lengt
   }
 
   return output;
+}
+
+export function quoteAttribute(input: string): string {
+  return `"${input}"`;
 }
 
 export function setupLogger(): void {

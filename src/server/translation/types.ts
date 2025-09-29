@@ -55,7 +55,8 @@ export type ElementRule = {
 };
 
 export type ElementRuleAttribute = {
-  length: LengthAttribute
+  length?: LengthAttribute;
+  quoted?: boolean;
 }
 
 export type LengthAttribute = {
@@ -67,7 +68,7 @@ export type LengthAttribute = {
 
 export interface Serializer {
   readonly version: string;
-  serialize: (stream: PassThrough, input: Record<string, unknown>, template: Template) => Promise<Readable>;
+  serialize: (stream: PassThrough, today: string, input: Record<string, unknown>, template: Template) => Promise<Readable>;
 }
 
 export interface Deserializer {
