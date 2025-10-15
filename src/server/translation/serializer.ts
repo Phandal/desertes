@@ -48,7 +48,7 @@ export class Serializer_0_0_1 implements Serializer {
     return stream;
   }
 
-  private _serializeSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>, stream: Writable): Thunk<number> {
+  private _countSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>): Thunk<number> {
     if (!segments) {
       return 0;
     }
@@ -77,11 +77,97 @@ export class Serializer_0_0_1 implements Serializer {
             if (filterExpression(input) === '') { continue; }; // Allow for filtering in the template
 
             if (segment.container) {
-              segmentCount += this.serializeSegments(segment.children, today, input, stream);
+              segmentCount += this.countSegments(segment.children, today, input);
             } else {
-              this.serializeElements(segment.elements, input, segment.trim, stream);
-              segmentCount += this.serializeSegments(segment.children, today, input, stream);
+              segmentCount += this.countSegments(segment.children, today, input);
               segmentCount += this.updateSegmentCount(segment);
+            }
+          }
+        } else if (segment.filter) {
+          const new_input = structuredClone(input);
+          const filter = segment.filter;
+          const filterExpression = this.filterFactory(filter.expression);
+          const filterObject = input[filter.property];
+          let filteredObject = filterObject;
+          const parentInput = filterObject !== undefined ? this.getParentInput(filter.property, input) : undefined;
+
+          if (Array.isArray(filterObject)) {
+            filteredObject = filterObject.filter((filterField) => {
+              if (filterField !== undefined && typeof filterField === 'object') {
+                filterField._PARENT = parentInput;
+              }
+              return filterExpression(filterField) !== '';
+            });
+          }
+
+          new_input[filter.property] = filteredObject;
+
+          if (segment.container) {
+            segmentCount += this.countSegments(segment.children, today, new_input);
+          } else {
+            segmentCount += this.countSegments(segment.children, today, new_input);
+            segmentCount += this.updateSegmentCount(segment);
+          }
+        } else if (segment.ignore) {
+          const filterExpression = this.filterFactory(segment.ignore);
+
+          if (filterExpression(input) !== '') {
+            if (segment.container) {
+              segmentCount += this.countSegments(segment.children, today, input);
+            } else {
+              segmentCount += this.countSegments(segment.children, today, input);
+              segmentCount += this.updateSegmentCount(segment);
+            }
+          }
+        } else {
+          if (segment.container) {
+            segmentCount += this.countSegments(segment.children, today, input);
+          } else {
+            segmentCount += this.countSegments(segment.children, today, input);
+            segmentCount += this.updateSegmentCount(segment);
+          }
+        }
+      }
+      
+      return segmentCount;
+    };
+  }
+
+  private countSegments = this.trampoline<number>(this._countSegments);
+
+  private _serializeSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>, stream: Writable): Thunk<void> {
+    if (!segments) {
+      return;
+    }
+
+    if (typeof input === 'object') {
+      input.__TODAY = today;
+    }
+
+    return (): void => {
+      const segmentCount = this.countSegments(segments, today, input, stream);
+      for (const segment of segments) {
+        if (segment.repetition) {
+          const repetition: Repetition = segment.repetition;
+          const repetitionObject = input[repetition.property];
+          const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
+
+          const filterExpression = this.filterFactory(repetition.filter);
+          const parentInput = repetitionObject !== undefined ? this.getParentInput(repetition.property, input) : undefined;
+
+          for (let i = 0; i < repetitionCount; ++i) {
+            const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
+            if (input !== undefined && typeof input === 'object') {
+              input._PARENT = parentInput;
+            }
+
+            if (filterExpression(input) === '') { continue; }; // Allow for filtering in the template
+
+            if (segment.container) {
+              this.serializeSegments(segment.children, today, input, stream);
+            } else {
+              this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
+              this.serializeSegments(segment.children, today, input, stream);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
@@ -105,11 +191,11 @@ export class Serializer_0_0_1 implements Serializer {
           new_input[filter.property] = filteredObject;
 
           if (segment.container) {
-            segmentCount += this.serializeSegments(segment.children, today, new_input, stream);
+            this.serializeSegments(segment.children, today, new_input, stream);
           } else {
-            this.serializeElements(segment.elements, new_input, segment.trim, stream);
-            segmentCount += this.serializeSegments(segment.children, today, new_input, stream);
-            segmentCount += this.updateSegmentCount(segment);
+            this.serializeElements(segment.elements, new_input, segment.trim, segmentCount, stream);
+            this.serializeSegments(segment.children, today, new_input, stream);
+            this.updateSegmentCount(segment);
             this.serializeCloseRule(segment.closeRule, new_input, segmentCount, stream);
           }
         } else if (segment.ignore) {
@@ -117,44 +203,44 @@ export class Serializer_0_0_1 implements Serializer {
 
           if (filterExpression(input) !== '') {
             if (segment.container) {
-              segmentCount += this.serializeSegments(segment.children, today, input, stream);
+              this.serializeSegments(segment.children, today, input, stream);
             } else {
-              this.serializeElements(segment.elements, input, segment.trim, stream);
-              segmentCount += this.serializeSegments(segment.children, today, input, stream);
-              segmentCount += this.updateSegmentCount(segment);
+              this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
+              this.serializeSegments(segment.children, today, input, stream);
+              this.updateSegmentCount(segment);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
         } else {
           if (segment.container) {
-            segmentCount += this.serializeSegments(segment.children, today, input, stream);
+            this.serializeSegments(segment.children, today, input, stream);
           } else {
-            this.serializeElements(segment.elements, input, segment.trim, stream);
-            segmentCount += this.serializeSegments(segment.children, today, input, stream);
-            segmentCount += this.updateSegmentCount(segment);
+            this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
+            this.serializeSegments(segment.children, today, input, stream);
+            this.updateSegmentCount(segment);
             this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }
         }
       }
-
-      return segmentCount;
     };
   }
 
-  private serializeSegments = this.trampoline<number>(this._serializeSegments);
+  private serializeSegments = this.trampoline<void>(this._serializeSegments);
 
   private serializeCloseRule(closeRule: CloseSegmentRule | undefined, input: Record<string, unknown>, segmentCount: number, stream: Writable): void {
     if (!closeRule) {
       return;
     }
-
-    const newInput = structuredClone(input);
-    newInput['_segment_count'] = segmentCount;
-    this.serializeElements(closeRule.elements, newInput, closeRule.trim, stream);
+    this.serializeElements(closeRule.elements, input, closeRule.trim, segmentCount, stream);
   }
 
-  private serializeElements(elementRules: ElementRule[], input: Record<string, unknown>, trim: boolean | undefined, stream: Writable): void {
+  private serializeElements(elementRules: ElementRule[], input: Record<string, unknown>, trim: boolean | undefined, segmentCount: number, stream: Writable): void {
     const elements: string[] = [];
+
+    if (typeof input === 'object') {
+      input['_segment_count'] = segmentCount;
+    }
+    
     elementRules.forEach((element) => {
       const compile = Handlebars.compile(element.value);
       const output = util.postCompileAttributes(element.attributes, compile(input), input);

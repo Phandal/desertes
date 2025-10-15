@@ -1565,6 +1565,193 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
+  it('header segment count', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Opening_Segment',
+          container: false,
+          elements: [
+            {
+              name: 'Opening_Element',
+              value: 'open',
+            },
+            {
+              name: 'iteration_count',
+              value: '{{_segment_count}}',
+            },
+          ],
+          children: [
+            {
+              name: 'Member_Record1',
+              container: false,
+              elements: [
+                {
+                  name: 'firstname',
+                  value: 'firstname1',
+                },
+                {
+                  name: 'lastname',
+                  value: 'lastname1',
+                },
+              ],
+              children: [],
+            },
+            {
+              name: 'Member_Record2',
+              container: false,
+              elements: [
+                {
+                  name: 'firstname',
+                  value: 'firstname2',
+                },
+                {
+                  name: 'lastname',
+                  value: 'lastname2',
+                },
+              ],
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = 'open*3~firstname1*lastname1~firstname2*lastname2~';
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('header segment count with repetition', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Opening_Segment',
+          container: false,
+          elements: [
+            {
+              name: 'Opening_Element',
+              value: 'open',
+            },
+            {
+              name: 'iteration_count',
+              value: '{{_segment_count}}',
+            },
+          ],
+          children: [
+            {
+              name: 'Member_Records',
+              container: false,
+              repetition: {
+                property: 'members',
+              },
+              elements: [
+                {
+                  name: 'firstname',
+                  value: '{{firstname}}',
+                },
+                {
+                  name: 'lastname',
+                  value: '{{lastname}}',
+                },
+              ],
+              children: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = 'open*3~firstname1*lastname1~firstname2*lastname2~';
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('header segment count with repetition and closerule', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'Opening_Segment',
+          container: false,
+          elements: [
+            {
+              name: 'Opening_Element',
+              value: 'open',
+            },
+            {
+              name: 'iteration_count',
+              value: '{{_segment_count}}',
+            },
+          ],
+          children: [
+            {
+              name: 'Member_Records',
+              container: false,
+              repetition: {
+                property: 'members',
+              },
+              elements: [
+                {
+                  name: 'firstname',
+                  value: '{{firstname}}',
+                },
+                {
+                  name: 'lastname',
+                  value: '{{lastname}}',
+                },
+              ],
+              children: [],
+            },
+          ],
+          closeRule: {
+            name: 'Closing_Segment',
+            elements: [
+              {
+                name: 'Closing_Element',
+                value: 'close',
+              },
+              {
+                name: 'iteration_count',
+                value: '{{_segment_count}}',
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const want = 'open*4~firstname1*lastname1~firstname2*lastname2~close*4~';
+
+    const got = await serialize(template, input);
+
+    assert.deepEqual(got, want);
+  });
+
   it('repetition property', async () => {
     const template: Template = {
       $schema: '',
