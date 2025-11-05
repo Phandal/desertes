@@ -325,7 +325,7 @@ function isPrecision(precision: number): precision is Precision {
 
 type Mode = 'start' | 'end';
 type Period = 'next' | 'current' | 'previous';
-type Unit = 'week' | 'month' | 'year';
+type Unit = 'week' | 'month' | 'year' | 'day';
 
 function isMode(modeString: string): modeString is Mode {
   return (modeString === 'start' || modeString === 'end');
@@ -335,7 +335,7 @@ function isPeriod(periodString: string): periodString is Period {
 }
 
 function isUnit(unitString: string): unitString is Unit {
-  return (unitString === 'week' || unitString === 'month' || unitString === 'year');
+  return (unitString === 'week' || unitString === 'month' || unitString === 'year' || unitString === 'day');
 }
 
 function getDateStart(period: Period, unit: Unit, input: Date): Date {
@@ -368,6 +368,8 @@ function getDateStartNext(unit: Unit, input: Date): Date {
       return dateFns.startOfMonth(dateFns.addMonths(input, 1));
     case 'year':
       return dateFns.startOfYear(dateFns.addYears(input, 1));
+    case 'day':
+      return dateFns.startOfDay(dateFns.addDays(input, 1));
   }
 }
 
@@ -379,6 +381,8 @@ function getDateStartCurrent(unit: Unit, input: Date): Date {
       return dateFns.startOfMonth(input);
     case 'year':
       return dateFns.startOfYear(input);
+    case 'day':
+      return dateFns.startOfDay(input);
   }
 }
 
@@ -390,6 +394,8 @@ function getDateStartPrevious(unit: Unit, input: Date): Date {
       return dateFns.startOfMonth(dateFns.subMonths(input, 1));
     case 'year':
       return dateFns.startOfYear(dateFns.subYears(input, 1));
+    case 'day':
+      return dateFns.startOfDay(dateFns.subDays(input, 1));
   }
 }
 
@@ -401,6 +407,8 @@ function getDateEndNext(unit: Unit, input: Date): Date {
       return dateFns.endOfMonth(dateFns.addMonths(input, 1));
     case 'year':
       return dateFns.endOfYear(dateFns.addYears(input, 1));
+    case 'day':
+      return dateFns.endOfDay(dateFns.addDays(input, 1));
   }
 }
 
@@ -412,6 +420,8 @@ function getDateEndCurrent(unit: Unit, input: Date): Date {
       return dateFns.endOfMonth(input);
     case 'year':
       return dateFns.endOfYear(input);
+    case 'day':
+      return dateFns.endOfDay(input);
   }
 }
 
@@ -423,6 +433,8 @@ function getDateEndPrevious(unit: Unit, input: Date): Date {
       return dateFns.endOfMonth(dateFns.subMonths(input, 1));
     case 'year':
       return dateFns.endOfYear(dateFns.subYears(input, 1));
+    case 'day':
+      return dateFns.endOfDay(dateFns.subDays(input, 1));
   }
 }
 

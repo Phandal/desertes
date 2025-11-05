@@ -2989,6 +2989,10 @@ describe('Serializer_0_0_1', () => {
               value: `{{getDate 'start' 'previous' 'year'}}`,
             },
             {
+              name: 'start_previous_day',
+              value: `{{getDate 'start' 'previous' 'day'}}`,
+            },
+            {
               name: 'start_current_week',
               value: `{{getDate 'start' 'current' 'week'}}`,
             },
@@ -2999,6 +3003,10 @@ describe('Serializer_0_0_1', () => {
             {
               name: 'start_current_year',
               value: `{{getDate 'start' 'current' 'year'}}`,
+            },
+            {
+              name: 'start_current_day',
+              value: `{{getDate 'start' 'current' 'day'}}`,
             },
             {
               name: 'start_next_week',
@@ -3013,6 +3021,10 @@ describe('Serializer_0_0_1', () => {
               value: `{{getDate 'start' 'next' 'year'}}`,
             },
             {
+              name: 'start_next_day',
+              value: `{{getDate 'start' 'next' 'day'}}`,
+            },
+            {
               name: 'end_previous_week',
               value: `{{getDate 'end' 'previous' 'week'}}`,
             },
@@ -3023,6 +3035,10 @@ describe('Serializer_0_0_1', () => {
             {
               name: 'end_previous_year',
               value: `{{getDate 'end' 'previous' 'year'}}`,
+            },
+            {
+              name: 'end_previous_day',
+              value: `{{getDate 'end' 'previous' 'day'}}`,
             },
             {
               name: 'end_current_week',
@@ -3037,6 +3053,10 @@ describe('Serializer_0_0_1', () => {
               value: `{{getDate 'end' 'current' 'year'}}`,
             },
             {
+              name: 'end_current_day',
+              value: `{{getDate 'end' 'current' 'day'}}`,
+            },
+            {
               name: 'end_next_week',
               value: `{{getDate 'end' 'next' 'week'}}`,
             },
@@ -3048,6 +3068,10 @@ describe('Serializer_0_0_1', () => {
               name: 'end_next_year',
               value: `{{getDate 'end' 'next' 'year'}}`,
             },
+            {
+              name: 'end_next_day',
+              value: `{{getDate 'end' 'next' 'day'}}`,
+            },
           ],
           children: [],
         },
@@ -3055,24 +3079,41 @@ describe('Serializer_0_0_1', () => {
     };
 
     const want = [
+      // start -- previous
       '03/09/2025',
       '02/01/2025',
       '01/01/2024',
+      '03/18/2025',
+
+      // start -- current
       '03/16/2025',
       '03/01/2025',
       '01/01/2025',
+      '03/19/2025',
+
+      // start -- next
       '03/23/2025',
       '04/01/2025',
       '01/01/2026',
+      '03/20/2025',
+
+      // end -- previous
       '03/15/2025',
       '02/28/2025',
       '12/31/2024',
+      '03/18/2025',
+
+      // end -- current
       '03/22/2025',
       '03/31/2025',
       '12/31/2025',
+      '03/19/2025',
+
+      // end -- next
       '03/29/2025',
       '04/30/2025',
       '12/31/2026',
+      '03/20/2025',
     ].join('\n');
 
     const got = await serialize(template, input);
