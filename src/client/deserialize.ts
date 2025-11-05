@@ -36,6 +36,9 @@ const inputEditorDiv = <HTMLDivElement>(
 const outputEditorDiv = <HTMLDivElement>(
 	document.querySelector('div#output-editor')
 );
+const assembleButton = <HTMLButtonElement>(
+	document.querySelector('button#assemble')
+);
 const deserializeButton = <HTMLButtonElement>(
 	document.querySelector('button#deserialize')
 );
@@ -52,6 +55,30 @@ const outputEditor = makeEditor(outputEditorDiv, {
 
 templateEditor.setValue(json);
 
+assembleButton.addEventListener('click', async () => {
+	try {
+		const template = JSON.parse(templateEditor.getValue() || '{}');
+		const deserializerInput = inputEditor.getValue();
+
+		const response = await fetch('/translate', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				mode: 'deserialize',
+				onlyAssemble: true,
+				template,
+				deserializerInput,
+			}),
+		});
+		const body = await response.text();
+		outputEditor.setValue(body);
+	} catch (err) {
+		const message =
+			err instanceof Error ? err.message : 'unexpected client side error';
+		outputEditor.setValue(message);
+	}
+});
+
 deserializeButton.addEventListener('click', async () => {
 	try {
 		const template = JSON.parse(templateEditor.getValue() || '{}');
@@ -62,6 +89,7 @@ deserializeButton.addEventListener('click', async () => {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				mode: 'deserialize',
+				onlyAssemble: false,
 				template,
 				deserializerInput,
 			}),
