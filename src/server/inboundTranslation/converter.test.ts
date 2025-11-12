@@ -12,10 +12,12 @@ const member: Member = {
   deferrals: [
     {
       kind: '401K',
+      earningsList: 'earning',
       amount: '$100',
     },
     {
       kind: 'Roth',
+      earningsList: 'earning',
       percent: '%2',
     },
   ],
@@ -69,6 +71,7 @@ describe('createUploadRecords', () => {
       ssn: '333-22-4444',
       effectiveDate: '2025-11-05T00:00:00.000Z',
       code: '401K',
+      earningsList: 'earning',
       amount: 100,
     };
 
@@ -80,6 +83,7 @@ describe('createUploadRecords', () => {
     const want: DeductionRecord = {
       ssn: '333-22-4444',
       effectiveDate: '2025-11-05T00:00:00.000Z',
+      earningsList: 'earning',
       code: 'Roth',
       percent: 0.02,
     };
@@ -103,12 +107,14 @@ describe('convert', () => {
       {
         ssn: '333-22-4444',
         effectiveDate: '2025-11-05T00:00:00.000Z',
+        earningsList: 'earning',
         code: '401K',
         amount: 100,
       },
       {
         ssn: '333-22-4444',
         effectiveDate: '2025-11-05T00:00:00.000Z',
+        earningsList: 'earning',
         code: 'Roth',
         percent: 0.02,
       },

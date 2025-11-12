@@ -28,11 +28,13 @@ export type Deferral = AmountDeferral | PercentDeferral
 
 export type AmountDeferral = {
   kind: string;
+  earningsList: string;
   amount: string;
 }
 
 export type PercentDeferral = {
   kind: string;
+  earningsList: string;
   percent: string;
 }
 
@@ -113,6 +115,7 @@ export type DeductionRecord = {
   ssn: string; // With Dashes e.g. 000-00-0000
   code: string; // Client specific, code must be chosen in the config
   effectiveDate: string; // ISO String 2025-10-10T00:00:00.000Z 
+  earningsList: string;
 } & (DeductionAmountRecord | DeductionPercentRecord)
 
 export type DeductionAmountRecord = {

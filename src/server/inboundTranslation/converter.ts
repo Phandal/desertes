@@ -50,6 +50,7 @@ export function createDeferralRecord(member: Member, deferral: Deferral): Deduct
     return {
       ssn: member.ssn,
       effectiveDate: member.effectiveDate,
+      earningsList: deferral.earningsList,
       code: deferral.kind,
       amount: Number(deferral.amount.replaceAll(/[$%,]/g, '')),
     };
@@ -60,6 +61,7 @@ export function createDeferralRecord(member: Member, deferral: Deferral): Deduct
     return {
       ssn: member.ssn,
       effectiveDate: member.effectiveDate,
+      earningsList: deferral.earningsList,
       code: deferral.kind,
       percent,
     };
