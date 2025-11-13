@@ -1,12 +1,11 @@
 import { Ajv } from 'ajv';
-import { Template } from './types.js';
 import { AnySchemaObject, CurrentOptions, ErrorObject } from 'ajv/dist/core.js';
 
-export type ValidationResponse = PassValidationResponse | FailValidationResponse;
+export type ValidationResponse<T> = PassValidationResponse<T> | FailValidationResponse;
 
-type PassValidationResponse = {
+type PassValidationResponse<T> = {
   valid: true;
-  template: Template;
+  template: T;
 };
 
 type FailValidationResponse = {
@@ -17,7 +16,7 @@ type FailValidationResponse = {
 /**
   * Validates the template against its schema
   */
-export async function validateSchema<T extends Record<string, unknown>>(template: T, options: CurrentOptions): Promise<ValidationResponse | Error> {
+export async function validateSchema<T>(template: Record<string, unknown>, options: CurrentOptions): Promise<ValidationResponse<T> | Error> {
   if (template['$schema'] === undefined) {
     return {
       valid: false,
@@ -42,7 +41,7 @@ export async function validateSchema<T extends Record<string, unknown>>(template
     if (valid) {
       return {
         valid: true,
-        template: template as unknown as Template,
+        template: template as T,
       };
     } else {
       return {
