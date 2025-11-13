@@ -23,7 +23,7 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 const json = `{
-  "$schema": "https://storageukgreadyedi.blob.core.windows.net/schema-files/inboundTemplate.json",
+  "$schema": "https://storageukgreadyedi.blob.core.windows.net/schema-files/inboundtemplate.json",
 }` as const;
 
 let Filename = 'template.json';
