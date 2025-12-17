@@ -39,6 +39,9 @@ const outputEditorDiv = <HTMLDivElement>(
 const assembleButton = <HTMLButtonElement>(
   document.querySelector('button#assemble')
 );
+const parseButton = <HTMLButtonElement>(
+  document.querySelector('button#parse')
+);
 const deserializeButton = <HTMLButtonElement>(
   document.querySelector('button#deserialize')
 );
@@ -66,6 +69,30 @@ assembleButton.addEventListener('click', async () => {
       body: JSON.stringify({
         mode: 'deserialize',
         onlyAssemble: true,
+        template,
+        deserializerInput,
+      }),
+    });
+    const body = await response.text();
+    outputEditor.setValue(body);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'unexpected client side error';
+    outputEditor.setValue(message);
+  }
+});
+
+parseButton.addEventListener('click', async () => {
+  try {
+    const template = JSON.parse(templateEditor.getValue() || '{}');
+    const deserializerInput = inputEditor.getValue();
+
+    const response = await fetch('/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'deserialize',
+        onlyParse: true,
         template,
         deserializerInput,
       }),

@@ -46,6 +46,7 @@ app.post('/translate', async (req, res) => {
     const mode = body.mode;
     const today = body.today;
     const onlyAssemble = body.onlyAssemble;
+    const onlyParse = body.onlyParse;
     let output = '';
 
     if (mode === 'serialize') {
@@ -104,11 +105,17 @@ app.post('/translate', async (req, res) => {
       const input = body.deserializerInput;
       const parser = createParser(config.parser);
       const parsedRecords = await parser(input);
-      const members = assemble(config.assembler, parsedRecords);
-      if (onlyAssemble) {
-        output = JSON.stringify(members, null, 2);
+
+      if (onlyParse) {
+        output = JSON.stringify(parsedRecords, null, 2);
       } else {
-        output = JSON.stringify(convert(members), null, 2);
+        const members = assemble(config.assembler, parsedRecords);
+        if (onlyAssemble) {
+          output = JSON.stringify(members, null, 2);
+        } else {
+          const covertedMembers = convert(members)
+          output = JSON.stringify(covertedMembers, null, 2);
+        }
       }
     } else {
       throw new Error(`invalid mode '${mode}'`);
