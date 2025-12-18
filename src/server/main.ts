@@ -3,7 +3,7 @@ import cors from 'cors';
 import { PassThrough, type Readable } from 'node:stream';
 import ViteExpress from 'vite-express';
 import * as template from './translation/template.js';
-import { SerializerFactory, Serializer_0_0_1 } from './translation/serializer';
+import { SerializerFactory, Serializer_0_0_1, XMLSerializer_0_0_1 } from './translation/serializer';
 import type { AnySchemaObject } from 'ajv';
 import {
   DeserializerFactory,
@@ -17,6 +17,7 @@ import type { Config } from './inboundTranslation/types.js';
 
 // Setup Factories
 SerializerFactory.registerSerializer(new Serializer_0_0_1());
+SerializerFactory.registerSerializer(new XMLSerializer_0_0_1());
 DeserializerFactory.registerDeserializer(new Deserializer_0_0_1());
 
 const PORT = 3000;
@@ -50,7 +51,7 @@ app.post('/translate', async (req, res) => {
     let output = '';
 
     if (mode === 'serialize') {
-      const validationResponse = await template.validateSchema<Template>(templ, {
+      const validationResponse = await template.validateSchema<Template>(JSON.stringify(templ), {
         loadSchema,
       });
 
@@ -82,7 +83,7 @@ app.post('/translate', async (req, res) => {
       );
       output = await readStream(stream);
     } else if (mode === 'deserialize') {
-      const validationResponse = await template.validateSchema<Config>(templ, {
+      const validationResponse = await template.validateSchema<Config>(JSON.stringify(templ), {
         loadSchema,
       });
 

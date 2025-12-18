@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import { DeserializerFactory, Deserializer_0_0_1 } from './deserializer.js';
-import { EDIObject, Deserializer, Template } from './types.js';
+import { EDIObject, Deserializer, Template, JSONTemplate } from './types.js';
 
 DeserializerFactory.registerDeserializer(new Deserializer_0_0_1());
 
@@ -13,7 +13,7 @@ class DeserializerStub implements Deserializer {
   };
 }
 
-function deserialize(template: Template, input: string): EDIObject {
+function deserialize(template: JSONTemplate, input: string): EDIObject {
   const deserializer = DeserializerFactory.getDeserializer(template.version);
   return deserializer.deserialize(template, input);
 }

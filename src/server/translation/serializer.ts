@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars';
 import { PassThrough, Readable, Writable } from 'stream';
-import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule } from './types.js';
+import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule, JSONTemplate } from './types.js';
 import * as util from './util.js';
 
 type FilterFunction = (input: unknown) => string;
@@ -9,6 +9,10 @@ type TrampolineFunction<K> = (...args: any[]) => Thunk<K>;
 type Thunk<K> = K | (() => Thunk<K>);
 
 const NoOpFilter: FilterFunction = (_input: unknown) => { return 'true'; };
+
+export function isJSONTemplate(template: Template): template is JSONTemplate {
+  return Array.isArray(template.rules);
+}
 
 export class SerializerFactory {
   static serializers: Record<string, Serializer> = {};
@@ -32,9 +36,8 @@ export class SerializerFactory {
   };
 }
 
-export class Serializer_0_0_1 implements Serializer {
-  readonly version = '0.0.1';
-  template: Template | undefined;
+export class XMLSerializer_0_0_1 implements Serializer {
+  readonly version = 'xml_0.0.1';
 
   constructor() {
     util.setupLogger();
@@ -42,6 +45,37 @@ export class Serializer_0_0_1 implements Serializer {
   }
 
   public async serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
+    if (isJSONTemplate(template)) {
+      throw new Error('cannot use json template with xml serialzer');
+    }
+
+    if (typeof input === 'object') {
+      input.__TODAY = today;
+    }
+
+    const compile = Handlebars.compile(template.rules);
+
+    stream.write(compile(input));
+
+    stream.end();
+    return stream;
+  }
+}
+
+export class Serializer_0_0_1 implements Serializer {
+  readonly version = '0.0.1';
+  template: JSONTemplate | undefined;
+
+  constructor() {
+    util.setupLogger();
+    util.registerHelpers();
+  }
+
+  public async serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
+    if (!isJSONTemplate(template)) {
+      throw new Error('cannot use xml template with json serializer');
+    }
+
     this.template = template;
     this.serializeSegments(this.template.rules, today, input, stream);
     stream.end();
@@ -128,7 +162,7 @@ export class Serializer_0_0_1 implements Serializer {
           }
         }
       }
-      
+
       return segmentCount;
     };
   }
@@ -240,7 +274,7 @@ export class Serializer_0_0_1 implements Serializer {
     if (typeof input === 'object') {
       input['_segment_count'] = segmentCount;
     }
-    
+
     elementRules.forEach((element) => {
       const compile = Handlebars.compile(element.value);
       const output = util.postCompileAttributes(element.attributes, compile(input), input);

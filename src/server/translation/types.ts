@@ -1,6 +1,15 @@
 import { PassThrough, Readable } from 'node:stream';
 
-export type Template = {
+export type Template = JSONTemplate | XMLTemplate;
+
+export type XMLTemplate = {
+  $schema: string;
+  name: string;
+  version: 'xml_0.0.1';
+  rules: string;
+}
+
+export type JSONTemplate = {
   $schema: string;
   name: string;
   version: '0.0.1';
@@ -73,7 +82,7 @@ export interface Serializer {
 
 export interface Deserializer {
   readonly version: string;
-  deserialize: (template: Template, input: string) => EDIObject;
+  deserialize: (template: JSONTemplate, input: string) => EDIObject;
 }
 
 export type EDISegment = { [key: string]: string | number | boolean | undefined | EDIObject | EDIObject[] };

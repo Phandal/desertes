@@ -83,16 +83,16 @@ describe('loadSchema', () => {
 
 describe('validateSchema', () => {
   it('should return a valid response when it works', async () => {
-    const template = { '$schema': 'localhost' };
+    const template = JSON.stringify({ '$schema': 'localhost' });
 
     const got = await validateSchema(template, { loadSchema: async () => { return {}; } });
-    const want = { valid: true, template: template };
+    const want = { valid: true, template: { $schema: 'localhost' } };
 
     assert.deepEqual(got, want);
   });
 
   it('should be invalid if the template is missing the "$schema" property', async () => {
-    const template = {};
+    const template = JSON.stringify({});
 
     const got = await validateSchema(template, { loadSchema: async () => { return {}; } });
     if (got instanceof Error) {
@@ -106,7 +106,7 @@ describe('validateSchema', () => {
   });
 
   it('should be invalid if the template does not match the schema', async () => {
-    const template = { name: 'test' };
+    const template = JSON.stringify({ name: 'test' });
 
     const got = await validateSchema(template, { loadSchema: async () => { return { required: ['test'] }; } });
     if (got instanceof Error) {
@@ -120,7 +120,7 @@ describe('validateSchema', () => {
   });
 
   it('should return an error when the fetch fails', async () => {
-    const template = { '$schema': 'localhost' };
+    const template = JSON.stringify({ '$schema': 'localhost' });
 
     const got = await validateSchema(template, { loadSchema: async () => { throw new Error('mock failed fetch'); } });
     const want = new Error('failed to fetch schema definition from \'localhost\': mock failed fetch');

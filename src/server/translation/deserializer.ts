@@ -1,7 +1,7 @@
 import Handlebars from 'handlebars';
 import * as util from './util.js';
 import { Document, Element, Segment, X12Parser } from './parser.js';
-import { ContainerSegmentRule, Deserializer, EDIObject, EDISegment, ElementRule, SegmentRule, StandardSegmentRule, Template } from './types.js';
+import { ContainerSegmentRule, Deserializer, EDIObject, EDISegment, ElementRule, JSONTemplate, SegmentRule, StandardSegmentRule } from './types.js';
 
 export class DeserializerFactory {
   static deserializers: Record<string, Deserializer> = {};
@@ -34,7 +34,7 @@ export class Deserializer_0_0_1 implements Deserializer {
     util.registerHelpers();
   }
 
-  deserialize(template: Template, input: string): EDIObject {
+  deserialize(template: JSONTemplate, input: string): EDIObject {
     const parser = new X12Parser({
       elementSeparator: template.elementSeparator,
       segmentSeparator: template.segmentSeparator,

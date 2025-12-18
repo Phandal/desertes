@@ -16,23 +16,27 @@ type FailValidationResponse = {
 /**
   * Validates the template against its schema
   */
-export async function validateSchema<T>(template: Record<string, unknown>, options: CurrentOptions): Promise<ValidationResponse<T> | Error> {
-  if (template['$schema'] === undefined) {
-    return {
-      valid: false,
-      errors: [
-        {
-          instancePath: '/',
-          schemaPath: '#/required',
-          keyword: 'required',
-          params: { missingProperty: '$schema' },
-          message: 'must have required property $schema',
-        },
-      ],
-    };
-  }
+export async function validateSchema<T>(tmplStr: string, options: CurrentOptions): Promise<ValidationResponse<T> | Error> {
+  let template;
 
   try {
+    template = JSON.parse(tmplStr);
+
+    if (template['$schema'] === undefined) {
+      return {
+        valid: false,
+        errors: [
+          {
+            instancePath: '/',
+            schemaPath: '#/required',
+            keyword: 'required',
+            params: { missingProperty: '$schema' },
+            message: 'must have required property $schema',
+          },
+        ],
+      };
+    }
+
     const ajv = new Ajv(options);
     const validate = await ajv.compileAsync({ $ref: template['$schema'] });
 

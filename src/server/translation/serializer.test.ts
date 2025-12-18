@@ -1,11 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { SerializerFactory, Serializer_0_0_1 } from './serializer.js';
-import { Serializer, Template } from './types.js';
+import { SerializerFactory, Serializer_0_0_1, XMLSerializer_0_0_1 } from './serializer.js';
+import { Serializer, Template, XMLTemplate } from './types.js';
 import { streamToBuffer } from '#test/util.js';
 import { PassThrough, Readable } from 'node:stream';
 
 SerializerFactory.registerSerializer(new Serializer_0_0_1());
+SerializerFactory.registerSerializer(new XMLSerializer_0_0_1());
 
 class SerializerStub implements Serializer {
   readonly version = '0.0.0';
@@ -77,6 +78,24 @@ describe('SerializerFactory', () => {
     assert.throws(() => { SerializerFactory.getSerializer('-1'); }, SerializerFactory.InvalidVersionError('-1'));
   });
 
+});
+
+describe('XMLSerializer_0_0_1', () => {
+
+  it('should be able to use handleBars helpers to serialize', async () => {
+    const template: XMLTemplate = {
+      $schema: '',
+      name: '',
+      version: 'xml_0.0.1',
+      rules: `<xml>{{#each members}}<member><firstname>{{this.firstname}}</firstname><lastname>{{this.lastname}}</lastname></member>{{/each}}</xml>`,
+    };
+
+    const want = `<xml><member><firstname>firstname1</firstname><lastname>lastname1</lastname></member><member><firstname>firstname2</firstname><lastname>lastname2</lastname></member></xml>`;
+
+    const got = await serialize(template, input);
+
+    assert.equal(got, want);
+  });
 });
 
 describe('Serializer_0_0_1', () => {
