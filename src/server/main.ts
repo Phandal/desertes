@@ -34,6 +34,10 @@ app.get('/(routes/)?deserialize$', (_, res) => {
   res.redirect('/routes/deserialize/');
 });
 
+app.get('/(routes/)?xmlserialize$', (_, res) => {
+  res.redirect('/routes/xmlserialize/');
+});
+
 app.get('/(routes/)?serialize$', (_, res) => {
   res.redirect('/routes/serialize/');
 });

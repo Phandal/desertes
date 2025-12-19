@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Desertes</title>
+  <link rel="stylesheet" href="/src/client/style.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <a href="/routes/">Home</a>
+      <button id="serialize">XML Serialize</button>
+      <button id="clear">Clear Output</button>
+      <button id="save">Save</button>
+      <input id='load' type='file' />
+      <label for='name' id='name'>Template Name</label>
+      <input id='name' type='text' />
+    </div>
+    <div id="template-editor" class="editor"></div>
+    <div id="input-editor" class="editor"></div>
+    <div id="output-editor" class="editor"></div>
+  </div>
+  <script type="module" src="/src/client/xmlserialize.ts"></script>
+</body>
+
+</html>
