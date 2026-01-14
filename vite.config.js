@@ -11,6 +11,7 @@ export default defineConfig({
         main: resolve(__dirname, 'routes/index.html'),
         deserialize: resolve(__dirname, 'routes/deserialize/index.html'),
         serialize: resolve(__dirname, 'routes/serialize/index.html'),
+        xmlserialize: resolve(__dirname, 'routes/xmlserialize/index.html'),
       }
     }
   }
