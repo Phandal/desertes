@@ -1,4 +1,5 @@
 import { createApplicator } from './applicators/applicatorfactory.js';
+import { createTransformer } from './transformers/transformerfactory.js';
 import { createMerger } from './mergers/mergerfactory.js';
 import type { AssemblerConfig, Member, ParsedRecord, Rule } from './types.js';
 
@@ -36,10 +37,13 @@ export function merge(rules: Rule[], records: ParsedRecord[]): Member {
 
   for (const rule of rules) {
     const applicator = createApplicator(rule);
-    const result = applicator(records);
+    let result = applicator(records);
 
     // This means the rule did not apply to the record
     if (result === null) { continue; }
+
+    const transformer = createTransformer(rule.mergeInto);
+    result = transformer(result);
 
     const merger = createMerger(rule);
     member = merger(member, result);

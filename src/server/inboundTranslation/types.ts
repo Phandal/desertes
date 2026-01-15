@@ -2,9 +2,12 @@ export type ApplicatorResult = string | Record<string, string>[] | null;
 
 export type Applicator = (records: ParsedRecord[]) => ApplicatorResult;
 
+export type Transformer = (result: ApplicatorResult) => ApplicatorResult;
+
 export type Merger = (member: Member, result: ApplicatorResult) => Member;
 
 export type Config = {
+  $schema: string;
   parser: ParserConfig;
   assembler: AssemblerConfig;
 }
@@ -101,12 +104,25 @@ export type PushMerge = {
   path: string;
   operation: 'push';
   output: PushMergeOutput;
+  transform?: TransformerOptions;
 }
 
 export type SetMerge = {
   path: string;
   operation: 'set';
   output: string;
+  transform?: TransformerOptions;
+}
+
+export type TransformerOptions = DateFormatTransformer;
+
+export type DateFormatTransformer = {
+  dateFormat: DateFormatTransformerOptions;
+};
+
+export type DateFormatTransformerOptions = {
+  inFormat: string;
+  outFormat: string;
 }
 
 export type UploadRecord = DeductionRecord | DemographicRecord;
