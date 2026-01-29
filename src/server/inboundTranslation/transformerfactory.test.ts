@@ -11,6 +11,12 @@ describe('transformerFactory', () => {
     assert(transformer !== noOp);
   });
 
+  it('createTransformer::percentFormat', () => {
+    const transformer = createTransformer({ path: '', output: '', operation: 'set', transform: { percentFormat: { inFormat: 'decimal' } } });
+    assert(typeof transformer === 'function');
+    assert(transformer !== noOp);
+  });
+
   it('createTransformer::noOp', () => {
     const transformer = createTransformer({ path: '', output: '', operation: 'set' });
     assert(typeof transformer === 'function');

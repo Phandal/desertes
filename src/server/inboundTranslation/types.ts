@@ -114,7 +114,7 @@ export type SetMerge = {
   transform?: TransformerOptions;
 }
 
-export type TransformerOptions = DateFormatTransformer;
+export type TransformerOptions = DateFormatTransformer | PercentFormatTransformer;
 
 export type DateFormatTransformer = {
   dateFormat: DateFormatTransformerOptions;
@@ -123,6 +123,15 @@ export type DateFormatTransformer = {
 export type DateFormatTransformerOptions = {
   inFormat: string;
   outFormat: string;
+}
+
+export type PercentFormatTransformer = {
+  percentFormat: PercentFormatTransformerOptions;
+  property?: string;
+}
+
+export type PercentFormatTransformerOptions = {
+  inFormat: 'percent' | 'decimal';
 }
 
 export type UploadRecord = DeductionRecord | DemographicRecord;
