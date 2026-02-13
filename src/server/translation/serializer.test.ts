@@ -4054,4 +4054,38 @@ describe('Serializer_0_0_1', () => {
 
     assert.deepEqual(got, want);
   });
+
+  it('string case helpers', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: '',
+      repetitionSeparator: '',
+      rules: [
+        {
+          name: 'test segment',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'upcase',
+              value: '{{toUpper singleMember.lastname}}',
+            },
+            {
+              name: 'downcase',
+              value: '{{toLower "TEST"}}',
+            },
+          ],
+        },
+      ],
+    };
+
+    const got = await serialize(template, input);
+    const want = 'LASTNAME,test\n';
+
+    assert.deepEqual(got, want);
+  });
 });

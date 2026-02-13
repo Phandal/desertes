@@ -310,6 +310,14 @@ export function registerHelpers(): void {
   Handlebars.registerHelper('not', function (a: unknown): boolean {
     return (!a);
   });
+
+  Handlebars.registerHelper('toUpper', function (a: string): string {
+    return (a.toUpperCase());
+  });
+
+  Handlebars.registerHelper('toLower', function (a: string): string {
+    return (a.toLowerCase());
+  });
 }
 
 type DotPreference = 'dot' | 'nodot';
