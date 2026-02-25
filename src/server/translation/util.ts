@@ -257,7 +257,9 @@ export function registerHelpers(): void {
     return loopObject.reduce((acc: number, obj: any) => {
       let value = Number(obj);
       if (typeof property === 'string' && typeof obj === 'object') {
-        value = Number(obj[property]);
+        value = Number(property.split('.').reduce((nestedObj, key) => {
+          return (nestedObj && nestedObj[key] !== undefined) ? nestedObj[key] : undefined;
+        }, obj));
       }
 
       if (isNaN(value) || value === undefined || value === null) {
@@ -317,6 +319,36 @@ export function registerHelpers(): void {
 
   Handlebars.registerHelper('toLower', function (a: string): string {
     return (a.toLowerCase());
+  });
+
+  Handlebars.registerHelper('find', function (arr: unknown, arrProp: string, compareProp: string, prop?: string): unknown {
+    if (!Handlebars.Utils.isArray(arr)) {
+      return '';
+    }
+
+    if ((arr as unknown[]).length === 0) {
+      return '';
+    }
+
+    if (typeof ((arr as unknown[])[0]) !== 'object') {
+      return '';
+    }
+
+    const findArr: { [key: string]: unknown }[] = arr as { [key: string]: unknown }[];
+
+    const found = findArr.find((a) => {
+      return (a)[arrProp] === compareProp;
+    });
+
+    if (found === undefined) {
+      return '';
+    }
+
+    if (prop !== undefined && typeof (found) === 'object') {
+      return found[prop];
+    }
+
+    return found;
   });
 }
 

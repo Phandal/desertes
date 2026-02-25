@@ -3653,21 +3653,27 @@ describe('Serializer_0_0_1', () => {
       objNums: [
         {
           v: 1,
+          o: { v: 1, 'contains space': 1 },
         },
         {
           v: 2,
+          o: { v: 2, 'contains space': 2 },
         },
         {
           v: 3,
+          o: { v: 3, 'contains space': 3 },
         },
         {
           v: 4,
+          o: { v: 4, 'contains space': 4 },
         },
         {
           v: '5',
+          o: { v: '5', 'contains space': '5' },
         },
         {
           v: -6,
+          o: { v: -6, 'contains space': -6 },
         },
       ],
     };
@@ -3694,12 +3700,20 @@ describe('Serializer_0_0_1', () => {
               name: 'sum objs',
               value: `{{sum objNums 'v'}}`,
             },
+            {
+              name: 'sum nested',
+              value: `{{sum objNums 'o.v'}}`,
+            },
+            {
+              name: 'sum nested with spaces',
+              value: `{{sum objNums 'o.contains space'}}`,
+            },
           ],
         },
       ],
     };
 
-    const want = '9*9~';
+    const want = '9*9*9*9~';
     const got = await serialize(template, input);
 
     assert.deepEqual(got, want);
@@ -4085,6 +4099,45 @@ describe('Serializer_0_0_1', () => {
 
     const got = await serialize(template, input);
     const want = 'LASTNAME,test\n';
+
+    assert.deepEqual(got, want);
+  });
+
+  it.only('find helper', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: '',
+      repetitionSeparator: '',
+      rules: [
+        {
+          name: 'test segment',
+          container: false,
+          trim: false,
+          children: [],
+          elements: [
+            {
+              name: 'find',
+              value: `{{find members 'lastname' 'lastname1' 'firstname'}}`,
+            },
+            {
+              name: 'find_non_array',
+              value: `{{find singleMember 'lastname' 'lastname1' 'firstname'}}`,
+            },
+            {
+              name: 'find_missing',
+              value: `{{find members 'lastname' 'notreal' 'firstname'}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const got = await serialize(template, input);
+    const want = 'firstname1,,\n';
 
     assert.deepEqual(got, want);
   });
