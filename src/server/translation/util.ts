@@ -321,7 +321,7 @@ export function registerHelpers(): void {
     return (a.toLowerCase());
   });
 
-  Handlebars.registerHelper('find', function (arr: unknown, arrProp: string, compareProp: string, prop?: string): unknown {
+  Handlebars.registerHelper('find', function (arr: unknown, arrProp: string, compareProp: string, prop: string): unknown {
     if (!Handlebars.Utils.isArray(arr)) {
       return '';
     }

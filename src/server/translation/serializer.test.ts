@@ -4103,7 +4103,7 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
-  it.only('find helper', async () => {
+  it('find helper', async () => {
     const template: Template = {
       $schema: '',
       name: '',
