@@ -4103,7 +4103,13 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
-  it('find helper', async () => {
+  it('phoneFormat helper', async () => {
+    const input = {
+      badPhone: `'+1 (111) 222-3333`,
+      goodPhone: '4445556666',
+      dashPhone: '777-888-9999',
+    };
+
     const template: Template = {
       $schema: '',
       name: '',
@@ -4116,28 +4122,31 @@ describe('Serializer_0_0_1', () => {
         {
           name: 'test segment',
           container: false,
-          trim: false,
           children: [],
           elements: [
             {
-              name: 'find',
-              value: `{{find members 'lastname' 'lastname1' 'firstname'}}`,
+              name: 'phoneFormat_bad_format',
+              value: '{{phoneFormat \'nodash\' badPhone}}'
             },
             {
-              name: 'find_non_array',
-              value: `{{find singleMember 'lastname' 'lastname1' 'firstname'}}`,
+              name: 'phoneFormat_good_format',
+              value: '{{phoneFormat \'nodash\' goodPhone}}'
             },
             {
-              name: 'find_missing',
-              value: `{{find members 'lastname' 'notreal' 'firstname'}}`,
+              name: 'phoneFormat_with_dash',
+              value: '{{phoneFormat \'dash\' dashPhone}}'
             },
+            {
+              name: 'phoneFormat_empty',
+              value: '{{phoneFormat \'nodash\' \'\'}}'
+            }
           ],
         },
       ],
     };
 
     const got = await serialize(template, input);
-    const want = 'firstname1,,\n';
+    const want = '1112223333,4445556666,777-888-9999,\n';
 
     assert.deepEqual(got, want);
   });

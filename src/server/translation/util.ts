@@ -321,34 +321,19 @@ export function registerHelpers(): void {
     return (a.toLowerCase());
   });
 
-  Handlebars.registerHelper('find', function (arr: unknown, arrProp: string, compareProp: string, prop: string): unknown {
-    if (!Handlebars.Utils.isArray(arr)) {
+  Handlebars.registerHelper('phoneFormat', function (key: string, phone: string): string {
+    if (typeof phone !== 'string') {
       return '';
     }
 
-    if ((arr as unknown[]).length === 0) {
-      return '';
+    switch (key) {
+      case 'dash':
+        return phone.replaceAll(/\+1|[^0-9-]/g, '');
+      case 'nodash':
+        return phone.replaceAll(/\+1|[^0-9]/g, '');
+      default:
+        throw new Error(`invalid phone format key '${key}'`);
     }
-
-    if (typeof ((arr as unknown[])[0]) !== 'object') {
-      return '';
-    }
-
-    const findArr: { [key: string]: unknown }[] = arr as { [key: string]: unknown }[];
-
-    const found = findArr.find((a) => {
-      return (a)[arrProp] === compareProp;
-    });
-
-    if (found === undefined) {
-      return '';
-    }
-
-    if (prop !== undefined && typeof (found) === 'object') {
-      return found[prop];
-    }
-
-    return found;
   });
 }
 
