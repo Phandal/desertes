@@ -2803,6 +2803,10 @@ describe('Serializer_0_0_1', () => {
                   name: 'parent_member_firstname',
                   value: '{{_PARENT._PARENT.singleMember.firstname}}',
                 },
+                {
+                  name: 'parent_member_one_firstname',
+                  value: '{{_PARENT._PARENT.members.[0].firstname}}'
+                },
               ],
               children: [],
             },
@@ -2810,7 +2814,7 @@ describe('Serializer_0_0_1', () => {
         },
       ],
     };
-    const want = 'firstname1*lastname~friend11*lastname1*firstname~friend12*lastname1*firstname~firstname2*lastname~friend21*lastname2*firstname~friend22*lastname2*firstname~';
+    const want = 'firstname1*lastname~friend11*lastname1*firstname*firstname1~friend12*lastname1*firstname*firstname1~firstname2*lastname~friend21*lastname2*firstname*firstname1~friend22*lastname2*firstname*firstname1~';
 
     const got = await serialize(template, input);
 
@@ -4133,11 +4137,39 @@ describe('Serializer_0_0_1', () => {
             },
           ],
         },
+        {
+          name: 'test members',
+          container: true,
+          repetition: {
+            property: 'members'
+          },
+          children: [
+            {
+              name: 'test friends',
+              container: false,
+              trim: true,
+              repetition: {
+                property: 'friends'
+              },
+              children: [],
+              elements: [
+                {
+                  name: 'name',
+                  value: '{{name}}',
+                },
+                {
+                  name: 'find',
+                  value: `{{find _PARENT._PARENT.members 'firstname' [_PARENT].[firstname] 'lastname'}}`,
+                }
+              ],
+            }
+          ],
+        }
       ],
     };
 
     const got = await serialize(template, input);
-    const want = 'firstname1,,\n';
+    const want = 'firstname1,,\nfriend11,lastname1\nfriend12,lastname1\nfriend21,lastname2\nfriend22,lastname2\n';
 
     assert.deepEqual(got, want);
   });

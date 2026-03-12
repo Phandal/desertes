@@ -100,7 +100,7 @@ export class Serializer_0_0_1 implements Serializer {
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput = repetitionObject !== undefined ? this.getParentInput(repetition.property, input) : undefined;
+          const parentInput = repetitionObject !== undefined ? this.getParentInput(input) : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
             const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
@@ -123,7 +123,7 @@ export class Serializer_0_0_1 implements Serializer {
           const filterExpression = this.filterFactory(filter.expression);
           const filterObject = input[filter.property];
           let filteredObject = filterObject;
-          const parentInput = filterObject !== undefined ? this.getParentInput(filter.property, input) : undefined;
+          const parentInput = filterObject !== undefined ? this.getParentInput(input) : undefined;
 
           if (Array.isArray(filterObject)) {
             filteredObject = filterObject.filter((filterField) => {
@@ -187,7 +187,7 @@ export class Serializer_0_0_1 implements Serializer {
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput = repetitionObject !== undefined ? this.getParentInput(repetition.property, input) : undefined;
+          const parentInput = repetitionObject !== undefined ? this.getParentInput(input) : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
             const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
@@ -211,7 +211,7 @@ export class Serializer_0_0_1 implements Serializer {
           const filterExpression = this.filterFactory(filter.expression);
           const filterObject = input[filter.property];
           let filteredObject = filterObject;
-          const parentInput = filterObject !== undefined ? this.getParentInput(filter.property, input) : undefined;
+          const parentInput = filterObject !== undefined ? this.getParentInput(input) : undefined;
 
           if (Array.isArray(filterObject)) {
             filteredObject = filterObject.filter((filterField) => {
@@ -328,8 +328,8 @@ export class Serializer_0_0_1 implements Serializer {
     };
   }
 
-  private getParentInput(key: string, { ...props }: Record<string, unknown>): unknown {
-    return { ...props, [key]: undefined };
+  private getParentInput({ ...props }: Record<string, unknown>): unknown {
+    return { ...props };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -257,9 +257,7 @@ export function registerHelpers(): void {
     return loopObject.reduce((acc: number, obj: any) => {
       let value = Number(obj);
       if (typeof property === 'string' && typeof obj === 'object') {
-        value = Number(property.split('.').reduce((nestedObj, key) => {
-          return (nestedObj && nestedObj[key] !== undefined) ? nestedObj[key] : undefined;
-        }, obj));
+        value = Number(walkObjectWithDotNotation(property, obj));
       }
 
       if (isNaN(value) || value === undefined || value === null) {
@@ -330,14 +328,16 @@ export function registerHelpers(): void {
       return '';
     }
 
-    if (typeof ((arr as unknown[])[0]) !== 'object') {
-      return '';
-    }
-
     const findArr: { [key: string]: unknown }[] = arr as { [key: string]: unknown }[];
 
     const found = findArr.find((a) => {
-      return (a)[arrProp] === compareProp;
+      if (typeof (a) !== 'object' || a === null) {
+        return false;
+      }
+
+      const value = walkObjectWithDotNotation(arrProp, a);
+      if (value === undefined) { return false; }
+      return value === compareProp;
     });
 
     if (found === undefined) {
@@ -365,6 +365,26 @@ export function registerHelpers(): void {
         throw new Error(`invalid phone format key '${key}'`);
     }
   });
+}
+
+export function walkObjectWithDotNotation(property: string, obj: Record<string, unknown>): unknown {
+  return (
+    property
+      .split('.')
+      .reduce<unknown>(
+        (nestedObj, key) => {
+          if (
+            nestedObj &&
+            typeof nestedObj === 'object' &&
+            key in (nestedObj as Record<string, unknown>)
+          ) {
+            return (nestedObj as Record<string, unknown>)[key];
+          }
+          return undefined;
+        },
+        obj,
+      )
+  );
 }
 
 type DotPreference = 'dot' | 'nodot';
