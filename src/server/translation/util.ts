@@ -321,6 +321,36 @@ export function registerHelpers(): void {
     return (a.toLowerCase());
   });
 
+  Handlebars.registerHelper('find', function (arr: unknown, arrProp: string, compareProp: string, prop: string): unknown {
+    if (!Handlebars.Utils.isArray(arr)) {
+      return '';
+    }
+
+    if ((arr as unknown[]).length === 0) {
+      return '';
+    }
+
+    if (typeof ((arr as unknown[])[0]) !== 'object') {
+      return '';
+    }
+
+    const findArr: { [key: string]: unknown }[] = arr as { [key: string]: unknown }[];
+
+    const found = findArr.find((a) => {
+      return (a)[arrProp] === compareProp;
+    });
+
+    if (found === undefined) {
+      return '';
+    }
+
+    if (prop !== undefined && typeof (found) === 'object') {
+      return found[prop];
+    }
+
+    return found;
+  });
+
   Handlebars.registerHelper('phoneFormat', function (key: string, phone: string): string {
     if (typeof phone !== 'string') {
       return '';

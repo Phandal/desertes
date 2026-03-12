@@ -4103,6 +4103,45 @@ describe('Serializer_0_0_1', () => {
     assert.deepEqual(got, want);
   });
 
+  it('find helper', async () => {
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: ',',
+      segmentSeparator: '\n',
+      componentSeparator: '',
+      repetitionSeparator: '',
+      rules: [
+        {
+          name: 'test segment',
+          container: false,
+          trim: false,
+          children: [],
+          elements: [
+            {
+              name: 'find',
+              value: `{{find members 'lastname' 'lastname1' 'firstname'}}`,
+            },
+            {
+              name: 'find_non_array',
+              value: `{{find singleMember 'lastname' 'lastname1' 'firstname'}}`,
+            },
+            {
+              name: 'find_missing',
+              value: `{{find members 'lastname' 'notreal' 'firstname'}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const got = await serialize(template, input);
+    const want = 'firstname1,,\n';
+
+    assert.deepEqual(got, want);
+  });
+
   it('phoneFormat helper', async () => {
     const input = {
       badPhone: `'+1 (111) 222-3333`,
@@ -4126,20 +4165,20 @@ describe('Serializer_0_0_1', () => {
           elements: [
             {
               name: 'phoneFormat_bad_format',
-              value: '{{phoneFormat \'nodash\' badPhone}}'
+              value: '{{phoneFormat \'nodash\' badPhone}}',
             },
             {
               name: 'phoneFormat_good_format',
-              value: '{{phoneFormat \'nodash\' goodPhone}}'
+              value: '{{phoneFormat \'nodash\' goodPhone}}',
             },
             {
               name: 'phoneFormat_with_dash',
-              value: '{{phoneFormat \'dash\' dashPhone}}'
+              value: '{{phoneFormat \'dash\' dashPhone}}',
             },
             {
               name: 'phoneFormat_empty',
-              value: '{{phoneFormat \'nodash\' \'\'}}'
-            }
+              value: '{{phoneFormat \'nodash\' \'\'}}',
+            },
           ],
         },
       ],
