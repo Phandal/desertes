@@ -100,7 +100,7 @@ export class Serializer_0_0_1 implements Serializer {
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput = repetitionObject !== undefined ? this.getParentInput(input) : undefined;
+          const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
             const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
@@ -118,15 +118,14 @@ export class Serializer_0_0_1 implements Serializer {
             }
           }
         } else if (segment.filter) {
-          const new_input = structuredClone(input);
           const filter = segment.filter;
           const filterExpression = this.filterFactory(filter.expression);
-          const filterObject = input[filter.property];
-          let filteredObject = filterObject;
-          const parentInput = filterObject !== undefined ? this.getParentInput(input) : undefined;
+          const originalFilterObject = input[filter.property];
+          let filteredObject = originalFilterObject;
+          const parentInput = originalFilterObject !== undefined ? input : undefined;
 
-          if (Array.isArray(filterObject)) {
-            filteredObject = filterObject.filter((filterField) => {
+          if (Array.isArray(originalFilterObject)) {
+            filteredObject = originalFilterObject.filter((filterField) => {
               if (filterField !== undefined && typeof filterField === 'object') {
                 filterField._PARENT = parentInput;
               }
@@ -134,14 +133,15 @@ export class Serializer_0_0_1 implements Serializer {
             });
           }
 
-          new_input[filter.property] = filteredObject;
+          input[filter.property] = filteredObject;
 
           if (segment.container) {
-            segmentCount += this.countSegments(segment.children, today, new_input);
+            segmentCount += this.countSegments(segment.children, today, input);
           } else {
-            segmentCount += this.countSegments(segment.children, today, new_input);
+            segmentCount += this.countSegments(segment.children, today, input);
             segmentCount += this.updateSegmentCount(segment);
           }
+          input[filter.property] = originalFilterObject;
         } else if (segment.ignore) {
           const filterExpression = this.filterFactory(segment.ignore);
 
@@ -187,7 +187,7 @@ export class Serializer_0_0_1 implements Serializer {
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput = repetitionObject !== undefined ? this.getParentInput(input) : undefined;
+          const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
             const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
@@ -206,15 +206,14 @@ export class Serializer_0_0_1 implements Serializer {
             }
           }
         } else if (segment.filter) {
-          const new_input = structuredClone(input);
           const filter = segment.filter;
           const filterExpression = this.filterFactory(filter.expression);
-          const filterObject = input[filter.property];
-          let filteredObject = filterObject;
-          const parentInput = filterObject !== undefined ? this.getParentInput(input) : undefined;
+          const originalFilterObject = input[filter.property];
+          let filteredObject = originalFilterObject;
+          const parentInput = originalFilterObject !== undefined ? input : undefined;
 
-          if (Array.isArray(filterObject)) {
-            filteredObject = filterObject.filter((filterField) => {
+          if (Array.isArray(originalFilterObject)) {
+            filteredObject = originalFilterObject.filter((filterField) => {
               if (filterField !== undefined && typeof filterField === 'object') {
                 filterField._PARENT = parentInput;
               }
@@ -222,16 +221,16 @@ export class Serializer_0_0_1 implements Serializer {
             });
           }
 
-          new_input[filter.property] = filteredObject;
+          input[filter.property] = filteredObject;
 
           if (segment.container) {
-            this.serializeSegments(segment.children, today, new_input, stream);
+            this.serializeSegments(segment.children, today, input, stream);
           } else {
-            this.serializeElements(segment.elements, new_input, segment.trim, segmentCount, stream);
-            this.serializeSegments(segment.children, today, new_input, stream);
-            this.updateSegmentCount(segment);
-            this.serializeCloseRule(segment.closeRule, new_input, segmentCount, stream);
+            this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
+            this.serializeSegments(segment.children, today, input, stream);
+            this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }
+          input[filter.property] = originalFilterObject;
         } else if (segment.ignore) {
           const filterExpression = this.filterFactory(segment.ignore);
 
@@ -241,7 +240,6 @@ export class Serializer_0_0_1 implements Serializer {
             } else {
               this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
               this.serializeSegments(segment.children, today, input, stream);
-              this.updateSegmentCount(segment);
               this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
@@ -251,7 +249,6 @@ export class Serializer_0_0_1 implements Serializer {
           } else {
             this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
             this.serializeSegments(segment.children, today, input, stream);
-            this.updateSegmentCount(segment);
             this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }
         }
@@ -326,10 +323,6 @@ export class Serializer_0_0_1 implements Serializer {
     return (input: unknown) => {
       return compile(input);
     };
-  }
-
-  private getParentInput({ ...props }: Record<string, unknown>): unknown {
-    return { ...props };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

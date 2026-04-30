@@ -2805,7 +2805,7 @@ describe('Serializer_0_0_1', () => {
                 },
                 {
                   name: 'parent_member_one_firstname',
-                  value: '{{_PARENT._PARENT.members.[0].firstname}}'
+                  value: '{{_PARENT._PARENT.members.[0].firstname}}',
                 },
               ],
               children: [],
@@ -4062,13 +4062,24 @@ describe('Serializer_0_0_1', () => {
                 quoted: true,
               },
             },
+            {
+              name: 'escaped_with_fixed_width',
+              value: '{{{csvfield}}}',
+              attributes: {
+                length: {
+                  min: 15,
+                  max: 15,
+                },
+                quoted: true,
+              },
+            },
           ],
         },
       ],
     };
 
     const got = await serialize(template, input);
-    const want = 'before,after,"before,after","before,a"\n';
+    const want = 'before,after,"before,after","before,a","before,after "\n';
 
     assert.deepEqual(got, want);
   });
@@ -4141,7 +4152,7 @@ describe('Serializer_0_0_1', () => {
           name: 'test members',
           container: true,
           repetition: {
-            property: 'members'
+            property: 'members',
           },
           children: [
             {
@@ -4149,7 +4160,7 @@ describe('Serializer_0_0_1', () => {
               container: false,
               trim: true,
               repetition: {
-                property: 'friends'
+                property: 'friends',
               },
               children: [],
               elements: [
@@ -4160,11 +4171,11 @@ describe('Serializer_0_0_1', () => {
                 {
                   name: 'find',
                   value: `{{find _PARENT._PARENT.members 'firstname' [_PARENT].[firstname] 'lastname'}}`,
-                }
+                },
               ],
-            }
+            },
           ],
-        }
+        },
       ],
     };
 

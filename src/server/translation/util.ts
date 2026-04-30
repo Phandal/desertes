@@ -22,7 +22,7 @@ export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, i
 
 export function lengthAttribute(input: string, attr: LengthAttribute, quoted: boolean | undefined, compileInput: Record<string, unknown>): string {
   const max = quoted ? attr.max - 2 : attr.max; // Making room for double quotes
-  const min = attr.min;
+  const min = quoted ? attr.min - 2 : attr.min; // Making room for double quotes
   const align = attr.align || 'left';
 
   // Setup Padding with a default of ' '
@@ -56,7 +56,7 @@ export function lengthAttribute(input: string, attr: LengthAttribute, quoted: bo
 }
 
 export function quoteAttribute(input: string): string {
-  return `"${input}"`;
+  return '"' + input + '"';
 }
 
 export function setupLogger(): void {
@@ -344,8 +344,8 @@ export function registerHelpers(): void {
       return '';
     }
 
-    if (prop !== undefined && typeof (found) === 'object') {
-      return found[prop];
+    if (prop !== undefined && typeof (found) === 'object' && typeof prop === 'string') {
+      return walkObjectWithDotNotation(prop, found);
     }
 
     return found;
