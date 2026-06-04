@@ -4,24 +4,9 @@ import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
 import * as jp from 'jsonpath';
 import { PassThrough, Readable, Writable } from 'stream';
-import type {
-  ElementRule,
-  Template,
-  Repetition,
-  Serializer,
-  SegmentRule,
-  CloseSegmentRule,
-  XMLTemplate,
-  X12Template,
-  XMLRule,
-  XMLSource,
-  XMLDateSource,
-} from './types.js';
+import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule, XMLTemplate, X12Template, XMLRule, XMLSource, XMLDateSource, XMLNumberSource, XMLLength } from './types.js';
 import * as util from './util.js';
-import {
-  XMLBuilderCB,
-  XMLBuilderCBCreateOptions,
-} from 'xmlbuilder2/lib/interfaces.js';
+import { XMLBuilderCB, XMLBuilderCBCreateOptions } from 'xmlbuilder2/lib/interfaces.js';
 import { AssertionError } from 'assert';
 
 type FilterFunction = (input: unknown) => string;
@@ -29,9 +14,7 @@ type FilterFunction = (input: unknown) => string;
 type TrampolineFunction<K> = (...args: any[]) => Thunk<K>;
 type Thunk<K> = K | (() => Thunk<K>);
 
-const NoOpFilter: FilterFunction = (_input: unknown) => {
-  return 'true';
-};
+const NoOpFilter: FilterFunction = (_input: unknown) => { return 'true'; };
 
 export class SerializerFactory {
   static serializers: Record<string, Serializer> = {};
@@ -52,7 +35,7 @@ export class SerializerFactory {
 
   static InvalidVersionError(version: string): Error {
     return new Error(`invalid serializer version from template '${version}'`);
-  }
+  };
 }
 
 /* #### XML Serialzier and utility functions #### */
@@ -61,17 +44,10 @@ export class XMLSerializer_0_0_1 implements Serializer {
   template: XMLTemplate | undefined;
 
   constructor() {
-    util.setupLogger();
-    util.registerHelpers();
   }
 
-  public serialize(
-    stream: PassThrough,
-    today: string,
-    input: Record<string, unknown>,
-    template: Template,
-  ): Promise<Readable> {
-    return new Promise((resolve, reject) => {
+  public serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
+    return new Promise<Readable>((resolve) => {
       if (!this.isValidTemplate(template)) {
         throw new Error('invalid template');
       }
@@ -91,6 +67,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
         prettyPrint: true,
         allowEmptyTags: true,
       };
+
       const document = xml.createCB(options);
       document.dec({
         version: '1.0',
@@ -102,18 +79,14 @@ export class XMLSerializer_0_0_1 implements Serializer {
     });
   }
 
-  private createElement(
-    config: XMLRule,
-    root: XMLBuilderCB,
-    context: Record<string, unknown>,
-    today: string,
-  ): XMLBuilderCB {
+  private createElement(config: XMLRule, root: XMLBuilderCB, context: Record<string, unknown>, today: string): XMLBuilderCB {
     if (typeof context === 'object') {
       context.__TODAY = today;
     }
 
     const children = config.children || [];
     let text = '';
+
     if ('source' in config && config.source) {
       text = this.expandSource(config.source, context);
     } else if ('text' in config && config.text) {
@@ -124,22 +97,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
       const element = root.ele(config.name, config.attributes);
 
       if (text) {
-        if (config.length) {
-          const padding = config.length.padding || ' ';
-          const align = config.length.align || 'left';
-
-          text = text.substring(0, config.length.max);
-
-          if (text.length < config.length.min) {
-            switch (align) {
-              case 'left':
-                text = text.padEnd(config.length.min, padding);
-                break;
-              case 'right':
-                text = text.padStart(config.length.min, padding);
-            }
-          }
-        }
+        text = this.expandLength(text, config.length);
         element.txt(text);
       }
 
@@ -151,11 +109,34 @@ export class XMLSerializer_0_0_1 implements Serializer {
       } else {
         this.expandChildren(children, element, context, today);
       }
-
       element.up();
     }
 
     return root;
+  }
+
+  private expandLength(text: string, lengthConfig: XMLLength | undefined): string {
+    if (!lengthConfig) {
+      return text;
+    }
+
+    const padding = lengthConfig.padding || ' ';
+    const align = lengthConfig.align || 'right';
+
+    text = text.substring(0, lengthConfig.max);
+
+    if (text.length < lengthConfig.min) {
+      switch (align) {
+        case 'left':
+          text = text.padEnd(lengthConfig.min, padding);
+          break;
+        case 'right':
+          text = text.padStart(lengthConfig.min, padding);
+          break;
+      }
+    }
+
+    return text;
   }
 
   private expandChildren(children: XMLRule[], element: XMLBuilderCB, context: Record<string, unknown>, today: string): void {
@@ -164,10 +145,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     }
   }
 
-  private expandSource(
-    source: XMLSource,
-    context: Record<string, unknown>,
-  ): string {
+  private expandSource(source: XMLSource, context: Record<string, unknown>): string {
     if (typeof source === 'object') {
       switch (source.kind) {
         case 'date':
@@ -175,17 +153,14 @@ export class XMLSerializer_0_0_1 implements Serializer {
         case 'number':
           return this.sourceNumber(source, context);
         default:
-          throw new Error(`unknown source kind '${source.kind}'`);
+          throw new Error(`unknown source kind '${JSON.stringify(source)}'`);
       }
     }
 
     return jp.value(context, source);
   }
 
-  private sourceDate(
-    source: XMLDateSource,
-    context: Record<string, unknown>,
-  ): string {
+  private sourceDate(source: XMLDateSource, context: Record<string, unknown>): string {
     let d;
     try {
       if (!source.input) {
@@ -203,10 +178,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     return dateFns.format(d, source.outFormat);
   }
 
-  private parseDate(
-    input: string | undefined,
-    format: string | undefined,
-  ): UTCDate {
+  private parseDate(input: string | undefined, format: string | undefined): UTCDate {
     const now = new UTCDate();
 
     if (input === undefined || typeof input !== 'string') {
@@ -220,10 +192,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     return dateFns.parse(input, format, now);
   }
 
-  private sourceNumber(
-    source: XMLNumberSource,
-    context: Record<string, unknown>,
-  ): string {
+  private sourceNumber(source: XMLNumberSource, context: Record<string, unknown>): string {
     let d: string;
     try {
       d = jp.value(context, source.input);
@@ -255,12 +224,7 @@ export class Serializer_0_0_1 implements Serializer {
     util.registerHelpers();
   }
 
-  public async serialize(
-    stream: PassThrough,
-    today: string,
-    input: Record<string, unknown>,
-    template: Template,
-  ): Promise<Readable> {
+  public async serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
     if (!this.isTemplateValid(template)) {
       throw new Error('invalid template');
     }
@@ -272,14 +236,11 @@ export class Serializer_0_0_1 implements Serializer {
   }
 
   private isTemplateValid(template: Template): template is X12Template {
-    return 'rules' in template;
+    return ('rules' in template);
+
   }
 
-  private _countSegments(
-    segments: SegmentRule[] | undefined,
-    today: string,
-    input: Record<string, unknown>,
-  ): Thunk<number> {
+  private _countSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>): Thunk<number> {
     if (!segments) {
       return 0;
     }
@@ -294,38 +255,23 @@ export class Serializer_0_0_1 implements Serializer {
         if (segment.repetition) {
           const repetition: Repetition = segment.repetition;
           const repetitionObject = input[repetition.property];
-          const repetitionCount = Array.isArray(repetitionObject)
-            ? repetitionObject.length
-            : 1; // Note the serialization should take place even if the input is undefined
+          const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput =
-            repetitionObject !== undefined ? input : undefined;
+          const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
-            const input = Array.isArray(repetitionObject)
-              ? repetitionObject[i]
-              : undefined;
+            const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
             if (input !== undefined && typeof input === 'object') {
               input._PARENT = parentInput;
             }
 
-            if (filterExpression(input) === '') {
-              continue;
-            } // Allow for filtering in the template
+            if (filterExpression(input) === '') { continue; }; // Allow for filtering in the template
 
             if (segment.container) {
-              segmentCount += this.countSegments(
-                segment.children,
-                today,
-                input,
-              );
+              segmentCount += this.countSegments(segment.children, today, input);
             } else {
-              segmentCount += this.countSegments(
-                segment.children,
-                today,
-                input,
-              );
+              segmentCount += this.countSegments(segment.children, today, input);
               segmentCount += this.updateSegmentCount(segment);
             }
           }
@@ -334,15 +280,11 @@ export class Serializer_0_0_1 implements Serializer {
           const filterExpression = this.filterFactory(filter.expression);
           const originalFilterObject = input[filter.property];
           let filteredObject = originalFilterObject;
-          const parentInput =
-            originalFilterObject !== undefined ? input : undefined;
+          const parentInput = originalFilterObject !== undefined ? input : undefined;
 
           if (Array.isArray(originalFilterObject)) {
             filteredObject = originalFilterObject.filter((filterField) => {
-              if (
-                filterField !== undefined &&
-                typeof filterField === 'object'
-              ) {
+              if (filterField !== undefined && typeof filterField === 'object') {
                 filterField._PARENT = parentInput;
               }
               return filterExpression(filterField) !== '';
@@ -363,17 +305,9 @@ export class Serializer_0_0_1 implements Serializer {
 
           if (filterExpression(input) !== '') {
             if (segment.container) {
-              segmentCount += this.countSegments(
-                segment.children,
-                today,
-                input,
-              );
+              segmentCount += this.countSegments(segment.children, today, input);
             } else {
-              segmentCount += this.countSegments(
-                segment.children,
-                today,
-                input,
-              );
+              segmentCount += this.countSegments(segment.children, today, input);
               segmentCount += this.updateSegmentCount(segment);
             }
           }
@@ -393,12 +327,7 @@ export class Serializer_0_0_1 implements Serializer {
 
   private countSegments = this.trampoline<number>(this._countSegments);
 
-  private _serializeSegments(
-    segments: SegmentRule[] | undefined,
-    today: string,
-    input: Record<string, unknown>,
-    stream: Writable,
-  ): Thunk<void> {
+  private _serializeSegments(segments: SegmentRule[] | undefined, today: string, input: Record<string, unknown>, stream: Writable): Thunk<void> {
     if (!segments) {
       return;
     }
@@ -413,43 +342,25 @@ export class Serializer_0_0_1 implements Serializer {
         if (segment.repetition) {
           const repetition: Repetition = segment.repetition;
           const repetitionObject = input[repetition.property];
-          const repetitionCount = Array.isArray(repetitionObject)
-            ? repetitionObject.length
-            : 1; // Note the serialization should take place even if the input is undefined
+          const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
           const filterExpression = this.filterFactory(repetition.filter);
-          const parentInput =
-            repetitionObject !== undefined ? input : undefined;
+          const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
-            const input = Array.isArray(repetitionObject)
-              ? repetitionObject[i]
-              : undefined;
+            const input = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
             if (input !== undefined && typeof input === 'object') {
               input._PARENT = parentInput;
             }
 
-            if (filterExpression(input) === '') {
-              continue;
-            } // Allow for filtering in the template
+            if (filterExpression(input) === '') { continue; }; // Allow for filtering in the template
 
             if (segment.container) {
               this.serializeSegments(segment.children, today, input, stream);
             } else {
-              this.serializeElements(
-                segment.elements,
-                input,
-                segment.trim,
-                segmentCount,
-                stream,
-              );
+              this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
               this.serializeSegments(segment.children, today, input, stream);
-              this.serializeCloseRule(
-                segment.closeRule,
-                input,
-                segmentCount,
-                stream,
-              );
+              this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
         } else if (segment.filter) {
@@ -457,15 +368,11 @@ export class Serializer_0_0_1 implements Serializer {
           const filterExpression = this.filterFactory(filter.expression);
           const originalFilterObject = input[filter.property];
           let filteredObject = originalFilterObject;
-          const parentInput =
-            originalFilterObject !== undefined ? input : undefined;
+          const parentInput = originalFilterObject !== undefined ? input : undefined;
 
           if (Array.isArray(originalFilterObject)) {
             filteredObject = originalFilterObject.filter((filterField) => {
-              if (
-                filterField !== undefined &&
-                typeof filterField === 'object'
-              ) {
+              if (filterField !== undefined && typeof filterField === 'object') {
                 filterField._PARENT = parentInput;
               }
               return filterExpression(filterField) !== '';
@@ -477,20 +384,9 @@ export class Serializer_0_0_1 implements Serializer {
           if (segment.container) {
             this.serializeSegments(segment.children, today, input, stream);
           } else {
-            this.serializeElements(
-              segment.elements,
-              input,
-              segment.trim,
-              segmentCount,
-              stream,
-            );
+            this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
             this.serializeSegments(segment.children, today, input, stream);
-            this.serializeCloseRule(
-              segment.closeRule,
-              input,
-              segmentCount,
-              stream,
-            );
+            this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }
           input[filter.property] = originalFilterObject;
         } else if (segment.ignore) {
@@ -500,40 +396,18 @@ export class Serializer_0_0_1 implements Serializer {
             if (segment.container) {
               this.serializeSegments(segment.children, today, input, stream);
             } else {
-              this.serializeElements(
-                segment.elements,
-                input,
-                segment.trim,
-                segmentCount,
-                stream,
-              );
+              this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
               this.serializeSegments(segment.children, today, input, stream);
-              this.serializeCloseRule(
-                segment.closeRule,
-                input,
-                segmentCount,
-                stream,
-              );
+              this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
             }
           }
         } else {
           if (segment.container) {
             this.serializeSegments(segment.children, today, input, stream);
           } else {
-            this.serializeElements(
-              segment.elements,
-              input,
-              segment.trim,
-              segmentCount,
-              stream,
-            );
+            this.serializeElements(segment.elements, input, segment.trim, segmentCount, stream);
             this.serializeSegments(segment.children, today, input, stream);
-            this.serializeCloseRule(
-              segment.closeRule,
-              input,
-              segmentCount,
-              stream,
-            );
+            this.serializeCloseRule(segment.closeRule, input, segmentCount, stream);
           }
         }
       }
@@ -542,31 +416,14 @@ export class Serializer_0_0_1 implements Serializer {
 
   private serializeSegments = this.trampoline<void>(this._serializeSegments);
 
-  private serializeCloseRule(
-    closeRule: CloseSegmentRule | undefined,
-    input: Record<string, unknown>,
-    segmentCount: number,
-    stream: Writable,
-  ): void {
+  private serializeCloseRule(closeRule: CloseSegmentRule | undefined, input: Record<string, unknown>, segmentCount: number, stream: Writable): void {
     if (!closeRule) {
       return;
     }
-    this.serializeElements(
-      closeRule.elements,
-      input,
-      closeRule.trim,
-      segmentCount,
-      stream,
-    );
+    this.serializeElements(closeRule.elements, input, closeRule.trim, segmentCount, stream);
   }
 
-  private serializeElements(
-    elementRules: ElementRule[],
-    input: Record<string, unknown>,
-    trim: boolean | undefined,
-    segmentCount: number,
-    stream: Writable,
-  ): void {
+  private serializeElements(elementRules: ElementRule[], input: Record<string, unknown>, trim: boolean | undefined, segmentCount: number, stream: Writable): void {
     const elements: string[] = [];
 
     if (typeof input === 'object') {
@@ -575,11 +432,7 @@ export class Serializer_0_0_1 implements Serializer {
 
     elementRules.forEach((element) => {
       const compile = Handlebars.compile(element.value);
-      const output = util.postCompileAttributes(
-        element.attributes,
-        compile(input),
-        input,
-      );
+      const output = util.postCompileAttributes(element.attributes, compile(input), input);
       elements.push(output);
     });
 

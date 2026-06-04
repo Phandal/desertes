@@ -7,22 +7,30 @@ export type XMLTemplate = {
   name: string;
   version: 'xml_0.0.1';
   document: XMLDocument;
-};
+}
 
 export type XMLDocument = {
   encoding: string;
   root: XMLRule;
-};
+}
 
 export type XMLRule = XMLTextRule | XMLSourceRule;
 
-interface XMLBaseRule {
+type XMLBaseRule = {
   name: string;
   required?: boolean;
-  attributes?: Record<string, string>;
+  attributes?: Record<string, string>
   context?: string;
   children?: XMLRule[];
   length?: XMLLength;
+}
+
+export type XMLTextRule = XMLBaseRule & {
+  text?: string;
+}
+
+export type XMLSourceRule = XMLBaseRule & {
+  source?: XMLSource;
 }
 
 export type XMLLength = {
@@ -30,31 +38,23 @@ export type XMLLength = {
   max: number;
   padding: string;
   align: 'left' | 'right';
-};
-
-export interface XMLTextRule extends XMLBaseRule {
-  text?: string;
-}
-
-export interface XMLSourceRule extends XMLBaseRule {
-  source?: XMLSource;
 }
 
 export type XMLSource = string | XMLDateSource | XMLNumberSource;
 
 export type XMLDateSource = {
-  kind: 'date';
+  kind: 'date',
   input?: string;
   inFormat?: string;
   outFormat: string;
-};
+}
 
 export type XMLNumberSource = {
   kind: 'number';
   input: string;
   dot: boolean;
   precision: number;
-};
+}
 
 export type X12Template = {
   $schema: string;
@@ -70,12 +70,12 @@ export type X12Template = {
 export type Repetition = {
   property: string;
   filter?: string;
-};
+}
 
 export type Filter = {
   property: string;
   expression: string;
-};
+}
 
 export type SegmentRule = StandardSegmentRule | ContainerSegmentRule;
 
@@ -102,10 +102,7 @@ export type ContainerSegmentRule = {
   children: SegmentRule[];
 };
 
-export type CloseSegmentRule = Pick<
-  StandardSegmentRule,
-  'name' | 'elements' | 'trim'
->;
+export type CloseSegmentRule = Pick<StandardSegmentRule, 'name' | 'elements' | 'trim'>;
 
 export type ElementRule = {
   name: string;
@@ -116,23 +113,18 @@ export type ElementRule = {
 export type ElementRuleAttribute = {
   length?: LengthAttribute;
   quoted?: boolean;
-};
+}
 
 export type LengthAttribute = {
   min: number;
   max: number;
   padding?: string;
   align?: 'left' | 'right';
-};
+}
 
 export interface Serializer {
   readonly version: string;
-  serialize: (
-    stream: PassThrough,
-    today: string,
-    input: Record<string, unknown>,
-    template: Template,
-  ) => Promise<Readable>;
+  serialize: (stream: PassThrough, today: string, input: Record<string, unknown>, template: Template) => Promise<Readable>;
 }
 
 export interface Deserializer {
@@ -140,15 +132,7 @@ export interface Deserializer {
   deserialize: (template: X12Template, input: string) => EDIObject;
 }
 
-export type EDISegment = {
-  [key: string]:
-  | string
-  | number
-  | boolean
-  | undefined
-  | EDIObject
-  | EDIObject[];
-};
+export type EDISegment = { [key: string]: string | number | boolean | undefined | EDIObject | EDIObject[] };
 export type EDIObject = Record<string, EDISegment[]>;
 
 export type SegmentNode = StandardSegmentNode | ContainerSegmentNode;
@@ -162,13 +146,11 @@ export type StandardSegmentNode = {
   nextSibling?: SegmentNode;
 };
 
-export type ContainerSegmentNode = Pick<
-  StandardSegmentNode,
-  'name' | 'children' | 'nextSibling'
-> & { isContainer: true };
+export type ContainerSegmentNode = Pick<StandardSegmentNode, 'name' | 'children' | 'nextSibling'> & { isContainer: true };
 
 export type ElementNode = {
   name: string;
   value: string;
   nextElement?: ElementNode;
 };
+
