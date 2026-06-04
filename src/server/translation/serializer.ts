@@ -210,7 +210,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     }
 
     if (d === undefined) {
-      throw new Error(`invalid number in number source '${d}'`);
+      d = '0';
     }
 
     d = Number(d).toFixed(source.precision);
