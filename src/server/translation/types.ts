@@ -1,15 +1,62 @@
 import { PassThrough, Readable } from 'node:stream';
 
-export type Template = JSONTemplate | XMLTemplate;
+export type Template = X12Template | XMLTemplate;
 
 export type XMLTemplate = {
   $schema: string;
   name: string;
   version: 'xml_0.0.1';
-  rules: string;
+  document: XMLDocument;
+};
+
+export type XMLDocument = {
+  encoding: string;
+  root: XMLRule;
+};
+
+export type XMLRule = XMLTextRule | XMLSourceRule;
+
+interface XMLBaseRule {
+  name: string;
+  required?: boolean;
+  attributes?: Record<string, string>;
+  context?: string;
+  children?: XMLRule[];
+  length?: XMLLength;
 }
 
-export type JSONTemplate = {
+export type XMLLength = {
+  min: number;
+  max: number;
+  padding: string;
+  align: 'left' | 'right';
+};
+
+export interface XMLTextRule extends XMLBaseRule {
+  text?: string;
+}
+
+export interface XMLSourceRule extends XMLBaseRule {
+  source?: XMLSource;
+}
+
+export type XMLSource = string | XMLDateSource | XMLNumberSource;
+
+export type XMLDateSource = {
+  kind: 'date';
+  input?: string;
+  inFormat?: string;
+  outFormat: string;
+};
+
+export type XMLNumberSource = {
+  kind: 'number';
+  input: string;
+  dot: boolean;
+  precision: number;
+};
+
+export type X12Template = {
   $schema: string;
   name: string;
   version: '0.0.1';
@@ -23,12 +70,12 @@ export type JSONTemplate = {
 export type Repetition = {
   property: string;
   filter?: string;
-}
+};
 
 export type Filter = {
   property: string;
   expression: string;
-}
+};
 
 export type SegmentRule = StandardSegmentRule | ContainerSegmentRule;
 
@@ -55,7 +102,10 @@ export type ContainerSegmentRule = {
   children: SegmentRule[];
 };
 
-export type CloseSegmentRule = Pick<StandardSegmentRule, 'name' | 'elements' | 'trim'>;
+export type CloseSegmentRule = Pick<
+  StandardSegmentRule,
+  'name' | 'elements' | 'trim'
+>;
 
 export type ElementRule = {
   name: string;
@@ -66,26 +116,39 @@ export type ElementRule = {
 export type ElementRuleAttribute = {
   length?: LengthAttribute;
   quoted?: boolean;
-}
+};
 
 export type LengthAttribute = {
   min: number;
   max: number;
   padding?: string;
   align?: 'left' | 'right';
-}
+};
 
 export interface Serializer {
   readonly version: string;
-  serialize: (stream: PassThrough, today: string, input: Record<string, unknown>, template: Template) => Promise<Readable>;
+  serialize: (
+    stream: PassThrough,
+    today: string,
+    input: Record<string, unknown>,
+    template: Template,
+  ) => Promise<Readable>;
 }
 
 export interface Deserializer {
   readonly version: string;
-  deserialize: (template: JSONTemplate, input: string) => EDIObject;
+  deserialize: (template: X12Template, input: string) => EDIObject;
 }
 
-export type EDISegment = { [key: string]: string | number | boolean | undefined | EDIObject | EDIObject[] };
+export type EDISegment = {
+  [key: string]:
+  | string
+  | number
+  | boolean
+  | undefined
+  | EDIObject
+  | EDIObject[];
+};
 export type EDIObject = Record<string, EDISegment[]>;
 
 export type SegmentNode = StandardSegmentNode | ContainerSegmentNode;
@@ -99,11 +162,13 @@ export type StandardSegmentNode = {
   nextSibling?: SegmentNode;
 };
 
-export type ContainerSegmentNode = Pick<StandardSegmentNode, 'name' | 'children' | 'nextSibling'> & { isContainer: true };
+export type ContainerSegmentNode = Pick<
+  StandardSegmentNode,
+  'name' | 'children' | 'nextSibling'
+> & { isContainer: true };
 
 export type ElementNode = {
   name: string;
   value: string;
   nextElement?: ElementNode;
 };
-

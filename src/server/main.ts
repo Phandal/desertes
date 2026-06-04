@@ -3,7 +3,11 @@ import cors from 'cors';
 import { PassThrough, type Readable } from 'node:stream';
 import ViteExpress from 'vite-express';
 import * as template from './translation/template.js';
-import { SerializerFactory, Serializer_0_0_1, XMLSerializer_0_0_1 } from './translation/serializer';
+import {
+  SerializerFactory,
+  Serializer_0_0_1,
+  XMLSerializer_0_0_1,
+} from './translation/serializer';
 import type { AnySchemaObject } from 'ajv';
 import {
   DeserializerFactory,
@@ -55,9 +59,12 @@ app.post('/translate', async (req, res) => {
     let output = '';
 
     if (mode === 'serialize') {
-      const validationResponse = await template.validateSchema<Template>(JSON.stringify(templ), {
-        loadSchema,
-      });
+      const validationResponse = await template.validateSchema<Template>(
+        JSON.stringify(templ),
+        {
+          loadSchema,
+        },
+      );
 
       if (validationResponse instanceof Error) {
         throw validationResponse;
@@ -87,9 +94,12 @@ app.post('/translate', async (req, res) => {
       );
       output = await readStream(stream);
     } else if (mode === 'deserialize') {
-      const validationResponse = await template.validateSchema<Config>(JSON.stringify(templ), {
-        loadSchema,
-      });
+      const validationResponse = await template.validateSchema<Config>(
+        JSON.stringify(templ),
+        {
+          loadSchema,
+        },
+      );
 
       if (validationResponse instanceof Error) {
         throw validationResponse;
@@ -118,7 +128,7 @@ app.post('/translate', async (req, res) => {
         if (onlyAssemble) {
           output = JSON.stringify(members, null, 2);
         } else {
-          const covertedMembers = convert(members)
+          const covertedMembers = convert(members);
           output = JSON.stringify(covertedMembers, null, 2);
         }
       }
@@ -157,6 +167,7 @@ function readStream(stream: Readable): Promise<string> {
 }
 
 async function loadSchema(uri: string) {
+  // try {
   const res = await fetch(uri);
   if (!res.ok) {
     throw new Error(`Loading Error: ${res.statusText}`);
@@ -165,4 +176,7 @@ async function loadSchema(uri: string) {
   const json = <AnySchemaObject>await res.json();
 
   return json;
+  // } catch {
+  //   return {};
+  // }
 }
