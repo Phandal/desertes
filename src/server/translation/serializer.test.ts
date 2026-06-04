@@ -82,15 +82,45 @@ describe('SerializerFactory', () => {
 
 describe('XMLSerializer_0_0_1', () => {
 
-  it('should be able to use handleBars helpers to serialize', async () => {
+  it('should be able to serialize with data interpolation', async () => {
     const template: XMLTemplate = {
       $schema: '',
       name: '',
       version: 'xml_0.0.1',
-      rules: `<xml>{{#each members}}<member><firstname>{{this.firstname}}</firstname><lastname>{{this.lastname}}</lastname></member>{{/each}}</xml>`,
+      document: {
+        encoding: 'utf-8',
+        root: {
+          name: 'root',
+          attributes: {
+            'test': 'https://notarealurl.fake',
+          },
+          required: true,
+          children: [
+            {
+              name: 'members',
+              required: true,
+              context: '$.members[*]',
+              children: [
+                {
+                  name: 'person',
+                  required: true,
+                  source: '$.firstname',
+                },
+              ],
+            },
+          ],
+        },
+      },
     };
 
-    const want = `<xml><member><firstname>firstname1</firstname><lastname>lastname1</lastname></member><member><firstname>firstname2</firstname><lastname>lastname2</lastname></member></xml>`;
+    const want = `<?xml version="1.0" encoding="utf-8"?>
+<root test="https://notarealurl.fake">
+  <members>
+    <person>firstname1</person>
+    <person>firstname2</person>
+  </members>
+</root>`;
+    // const want = `<xml><member><firstname>firstname1</firstname><lastname>lastname1</lastname></member><member><firstname>firstname2</firstname><lastname>lastname2</lastname></member></xml>`;
 
     const got = await serialize(template, input);
 

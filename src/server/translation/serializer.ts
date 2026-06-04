@@ -2,7 +2,7 @@ import Handlebars from 'handlebars';
 import * as xml from 'xmlbuilder2';
 import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
-import * as jp from 'jsonpath';
+import jp from 'jsonpath';
 import { PassThrough, Readable, Writable } from 'stream';
 import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule, XMLTemplate, X12Template, XMLRule, XMLSource, XMLDateSource, XMLNumberSource, XMLLength } from './types.js';
 import * as util from './util.js';
@@ -85,7 +85,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     }
 
     const children = config.children || [];
-    let text = '';
+    let text: string | undefined;
 
     if ('source' in config && config.source) {
       text = this.expandSource(config.source, context);
@@ -145,7 +145,7 @@ export class XMLSerializer_0_0_1 implements Serializer {
     }
   }
 
-  private expandSource(source: XMLSource, context: Record<string, unknown>): string {
+  private expandSource(source: XMLSource, context: Record<string, unknown>): string | undefined {
     if (typeof source === 'object') {
       switch (source.kind) {
         case 'date':
@@ -157,7 +157,12 @@ export class XMLSerializer_0_0_1 implements Serializer {
       }
     }
 
-    return jp.value(context, source);
+    const text = jp.value(context, source);
+    if (text === undefined) {
+      return undefined;
+    }
+
+    return text.toString();
   }
 
   private sourceDate(source: XMLDateSource, context: Record<string, unknown>): string {
@@ -202,6 +207,10 @@ export class XMLSerializer_0_0_1 implements Serializer {
       } else {
         throw err;
       }
+    }
+
+    if (d === undefined) {
+      throw new Error(`invalid number in number source '${d}'`);
     }
 
     d = Number(d).toFixed(source.precision);
