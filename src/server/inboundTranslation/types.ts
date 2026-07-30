@@ -45,7 +45,7 @@ export type ParsedRecord = { [name: string]: string };
 
 export type Parser = (input: string) => Promise<ParsedRecord[]>;
 
-export type ParserConfig = CSVParserConfig;
+export type ParserConfig = CSVParserConfig | FixedWidthParserConfig;
 
 export type CSVParserConfig = {
   kind: 'csv';
@@ -54,6 +54,17 @@ export type CSVParserConfig = {
   trim: boolean;
   fields: Array<{ name: string, index: number }>;
 }
+
+export type FixedWidthParserConfig = {
+  kind: 'fixedwidth';
+  trim: boolean;
+  skipLines?: number;
+  recordLength?: number;
+  match?: FixedWidthMatch;
+  fields: Array<{ name: string, start: number, length: number }>;
+}
+
+export type FixedWidthMatch = { start: number; length: number; equals: string };
 
 export type AssemblerConfig = {
   groupBy: string;
@@ -114,7 +125,7 @@ export type SetMerge = {
   transform?: TransformerOptions;
 }
 
-export type TransformerOptions = DateFormatTransformer | PercentFormatTransformer;
+export type TransformerOptions = DateFormatTransformer | PercentFormatTransformer | ImpliedDecimalTransformer;
 
 export type DateFormatTransformer = {
   dateFormat: DateFormatTransformerOptions;
@@ -132,6 +143,15 @@ export type PercentFormatTransformer = {
 
 export type PercentFormatTransformerOptions = {
   inFormat: 'percent' | 'decimal';
+}
+
+export type ImpliedDecimalTransformer = {
+  impliedDecimal: ImpliedDecimalTransformerOptions;
+}
+
+export type ImpliedDecimalTransformerOptions = {
+  places: number;
+  property?: string;
 }
 
 export type UploadRecord = DeductionRecord | DemographicRecord;
