@@ -1,7 +1,20 @@
 import type { Parser, FixedWidthParserConfig, ParsedRecord } from '../types.js';
 
+function assertValidRange(label: string, start: number, end: number): void {
+  if (!Number.isInteger(start) || start < 0 || !Number.isInteger(end) || end <= start) {
+    throw new Error(`${label} must have an integer start >= 0 and an integer end > start: start=${start} end=${end}`);
+  }
+}
+
 export function fixedWidthParser(config: FixedWidthParserConfig): Parser {
   return async (input: string): Promise<ParsedRecord[]> => {
+    for (const field of config.fields) {
+      assertValidRange(`field "${field.name}"`, field.start, field.end);
+    }
+    if (config.match !== undefined) {
+      assertValidRange('match', config.match.start, config.match.end);
+    }
+
     let lines: string[];
 
     if (config.recordLength !== undefined) {
@@ -21,13 +34,13 @@ export function fixedWidthParser(config: FixedWidthParserConfig): Parser {
 
     if (config.match !== undefined) {
       const match = config.match;
-      lines = lines.filter((line) => line.substring(match.start - 1, match.start - 1 + match.length) === match.equals);
+      lines = lines.filter((line) => line.substring(match.start, match.end) === match.equals);
     }
 
     return lines.map((line) => {
       const record: Record<string, string> = {};
       for (const field of config.fields) {
-        let data = line.substring(field.start - 1, field.start - 1 + field.length);
+        let data = line.substring(field.start, field.end);
 
         if (config.trim) {
           data = data.trim();

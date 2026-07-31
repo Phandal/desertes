@@ -61,10 +61,26 @@ export type FixedWidthParserConfig = {
   skipLines?: number;
   recordLength?: number;
   match?: FixedWidthMatch;
-  fields: Array<{ name: string, start: number, length: number }>;
+  fields: FixedWidthField[];
 }
 
-export type FixedWidthMatch = { start: number; length: number; equals: string };
+export type FixedWidthMatch = {
+  /** Inclusive 0 based index */
+  start: number;
+  /** Exclusive 0 based index */
+  end: number;
+  /** Substring to match against */
+  equals: string
+};
+
+export type FixedWidthField = {
+  /** Name of the field */
+  name: string;
+  /** Inclusive 0 based index */
+  start: number;
+  /** Exclusive 0 based index */
+  end: number;
+}
 
 export type AssemblerConfig = {
   groupBy: string;

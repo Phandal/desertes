@@ -8,7 +8,7 @@ import type { AssemblerConfig, FixedWidthParserConfig } from '../types.js';
 function record180(values: Array<{ start: number, value: string }>): string {
   let line = ''.padEnd(180, ' ');
   for (const { start, value } of values) {
-    line = line.substring(0, start - 1) + value + line.substring(start - 1 + value.length);
+    line = line.substring(0, start) + value + line.substring(start + value.length);
   }
   return line;
 }
@@ -19,8 +19,8 @@ describe('fixedWidthParser', () => {
       kind: 'fixedwidth',
       trim: false,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -34,8 +34,8 @@ describe('fixedWidthParser', () => {
       kind: 'fixedwidth',
       trim: true,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -50,8 +50,8 @@ describe('fixedWidthParser', () => {
       trim: true,
       skipLines: 1,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -64,9 +64,9 @@ describe('fixedWidthParser', () => {
     const config: FixedWidthParserConfig = {
       kind: 'fixedwidth',
       trim: true,
-      match: { start: 1, length: 1, equals: '2' },
+      match: { start: 0, end: 1, equals: '2' },
       fields: [
-        { name: 'name', start: 2, length: 5 },
+        { name: 'name', start: 1, end: 6 },
       ],
     };
 
@@ -80,9 +80,9 @@ describe('fixedWidthParser', () => {
     const config: FixedWidthParserConfig = {
       kind: 'fixedwidth',
       trim: true,
-      match: { start: 1, length: 3, equals: 'AB ' },
+      match: { start: 0, end: 3, equals: 'AB ' },
       fields: [
-        { name: 'name', start: 4, length: 5 },
+        { name: 'name', start: 3, end: 8 },
       ],
     };
 
@@ -97,8 +97,8 @@ describe('fixedWidthParser', () => {
       kind: 'fixedwidth',
       trim: false,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -113,7 +113,7 @@ describe('fixedWidthParser', () => {
       kind: 'fixedwidth',
       trim: true,
       fields: [
-        { name: 'name', start: 1, length: 5 },
+        { name: 'name', start: 0, end: 5 },
       ],
     };
 
@@ -128,8 +128,8 @@ describe('fixedWidthParser', () => {
       trim: false,
       recordLength: 7,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -144,7 +144,7 @@ describe('fixedWidthParser', () => {
         kind: 'fixedwidth',
         trim: false,
         recordLength,
-        fields: [{ name: 'name', start: 1, length: 5 }],
+        fields: [{ name: 'name', start: 0, end: 5 }],
       };
 
       const parser = fixedWidthParser(config);
@@ -152,13 +152,46 @@ describe('fixedWidthParser', () => {
     }
   });
 
+  it('fixedwidth::invalid-field-range', async () => {
+    const badRanges = [
+      { start: 5, end: 5 },
+      { start: 5, end: 3 },
+      { start: -1, end: 5 },
+      { start: 0.5, end: 5 },
+      { start: 0, end: 5.5 },
+    ];
+
+    for (const { start, end } of badRanges) {
+      const config: FixedWidthParserConfig = {
+        kind: 'fixedwidth',
+        trim: false,
+        fields: [{ name: 'name', start, end }],
+      };
+
+      const parser = fixedWidthParser(config);
+      await assert.rejects(parser('Jack 14'), /field "name"/);
+    }
+  });
+
+  it('fixedwidth::invalid-match-range', async () => {
+    const config: FixedWidthParserConfig = {
+      kind: 'fixedwidth',
+      trim: false,
+      match: { start: 1, end: 0, equals: '2' },
+      fields: [{ name: 'name', start: 0, end: 5 }],
+    };
+
+    const parser = fixedWidthParser(config);
+    await assert.rejects(parser('2Jack'), /match/);
+  });
+
   it('fixedwidth::newlines', async () => {
     const config: FixedWidthParserConfig = {
       kind: 'fixedwidth',
       trim: true,
       fields: [
-        { name: 'name', start: 1, length: 5 },
-        { name: 'age', start: 6, length: 2 },
+        { name: 'name', start: 0, end: 5 },
+        { name: 'age', start: 5, end: 7 },
       ],
     };
 
@@ -168,22 +201,22 @@ describe('fixedWidthParser', () => {
   });
 
   it('fixedwidth::roundtrip', async () => {
-    const header = record180([{ start: 1, value: '1' }, { start: 38, value: '20250101' }]);
+    const header = record180([{ start: 0, value: '1' }, { start: 37, value: '20250101' }]);
     const detailOne = record180([
-      { start: 1, value: '2' },
-      { start: 38, value: '123456789' },
-      { start: 62, value: '20250101' },
-      { start: 70, value: 'AAA' },
-      { start: 74, value: '00000000500' },
+      { start: 0, value: '2' },
+      { start: 37, value: '123456789' },
+      { start: 61, value: '20250101' },
+      { start: 69, value: 'AAA' },
+      { start: 73, value: '00000000500' },
     ]);
     const detailTwo = record180([
-      { start: 1, value: '2' },
-      { start: 38, value: '987654321' },
-      { start: 62, value: '20250101' },
-      { start: 70, value: 'NRB' },
-      { start: 74, value: '00000001000' },
+      { start: 0, value: '2' },
+      { start: 37, value: '987654321' },
+      { start: 61, value: '20250101' },
+      { start: 69, value: 'NRB' },
+      { start: 73, value: '00000001000' },
     ]);
-    const trailer = record180([{ start: 1, value: '3' }]);
+    const trailer = record180([{ start: 0, value: '3' }]);
     const input = [header, detailOne, detailTwo, trailer].join('\n') + '\n';
 
     assert.strictEqual(detailOne.length, 180);
@@ -191,12 +224,12 @@ describe('fixedWidthParser', () => {
     const parserConfig: FixedWidthParserConfig = {
       kind: 'fixedwidth',
       trim: true,
-      match: { start: 1, length: 1, equals: '2' },
+      match: { start: 0, end: 1, equals: '2' },
       fields: [
-        { name: 'ssn', start: 38, length: 9 },
-        { name: 'effDate', start: 62, length: 8 },
-        { name: 'sourceType', start: 70, length: 3 },
-        { name: 'amount', start: 74, length: 11 },
+        { name: 'ssn', start: 37, end: 46 },
+        { name: 'effDate', start: 61, end: 69 },
+        { name: 'sourceType', start: 69, end: 72 },
+        { name: 'amount', start: 73, end: 84 },
       ],
     };
 
