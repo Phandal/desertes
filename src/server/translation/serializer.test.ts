@@ -81,7 +81,6 @@ describe('SerializerFactory', () => {
 });
 
 describe('XMLSerializer_0_0_1', () => {
-
   it('should be able to serialize with data interpolation', async () => {
     const template: XMLTemplate = {
       $schema: '',
@@ -91,20 +90,108 @@ describe('XMLSerializer_0_0_1', () => {
         encoding: 'utf-8',
         root: {
           name: 'root',
+          required: true,
           attributes: {
             'test': 'https://notarealurl.fake',
           },
+          children: [
+            {
+              name: 'person',
+              required: true,
+              repetition: {
+                property: 'members',
+              },
+              value: '{{firstname}}',
+            },
+          ],
+        },
+      },
+    };
+
+    const want = `<?xml version="1.0" encoding="utf-8"?>
+<root test="https://notarealurl.fake">
+  <person>firstname1</person>
+  <person>firstname2</person>
+</root>`;
+
+    const got = await serialize(template, input);
+
+    assert.equal(got, want);
+  });
+
+  it('should be able to ignore simple tags that do not have any output if they are not required', async () => {
+    const template: XMLTemplate = {
+      $schema: '',
+      name: '',
+      version: 'xml_0.0.1',
+      document: {
+        encoding: 'utf-8',
+        root: {
+          name: 'root',
           required: true,
           children: [
             {
-              name: 'members',
+              name: 'person',
               required: true,
-              context: '$.members[*]',
+              repetition: {
+                property: 'members',
+                filter: `{{#compare firstname '==' 'firstname1'}}1{{/compare}}`,
+              },
+              value: '{{firstname}}',
+            },
+            {
+              name: 'ignore',
+              required: false,
+              value: '',
+            },
+          ],
+        },
+      },
+    };
+
+    const want = `<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <person>firstname1</person>
+</root>`;
+
+    const got = await serialize(template, input);
+
+    assert.equal(got, want);
+  });
+
+  it('should be able to ignore complex tags that do not have any output if they are not required', async () => {
+    const template: XMLTemplate = {
+      $schema: '',
+      name: '',
+      version: 'xml_0.0.1',
+      document: {
+        encoding: 'utf-8',
+        root: {
+          name: 'root',
+          required: true,
+          children: [
+            {
+              name: 'person',
+              required: true,
+              repetition: {
+                property: 'members',
+              },
               children: [
                 {
-                  name: 'person',
-                  required: true,
-                  source: '$.firstname',
+                  name: 'firstname',
+                  required: false,
+                  value: '{{firstname}}',
+                },
+                {
+                  name: 'keep_lastname',
+                  ignore: `{{#compare lastname '==' 'lastname2'}}1{{/compare}}`,
+                  children: [
+                    {
+                      name: 'lastname',
+                      required: true,
+                      value: '{{lastname}}',
+                    },
+                  ],
                 },
               ],
             },
@@ -114,13 +201,17 @@ describe('XMLSerializer_0_0_1', () => {
     };
 
     const want = `<?xml version="1.0" encoding="utf-8"?>
-<root test="https://notarealurl.fake">
-  <members>
-    <person>firstname1</person>
-    <person>firstname2</person>
-  </members>
+<root>
+  <person>
+    <firstname>firstname1</firstname>
+  </person>
+  <person>
+    <firstname>firstname2</firstname>
+    <keep_lastname>
+      <lastname>lastname2</lastname>
+    </keep_lastname>
+  </person>
 </root>`;
-    // const want = `<xml><member><firstname>firstname1</firstname><lastname>lastname1</lastname></member><member><firstname>firstname2</firstname><lastname>lastname2</lastname></member></xml>`;
 
     const got = await serialize(template, input);
 
@@ -2700,6 +2791,44 @@ describe('Serializer_0_0_1', () => {
 
     const want = 'XXX-XX-XXXX*XXXXXXXXX*XXX-XX-XXXX*XXXXXXXXX~';
     const got = await serialize(template, ssnInput);
+
+    assert.deepEqual(got, want);
+  });
+
+  it('ssnFormat returns an empty string if an empty string is supplied', async () => {
+    const input = {
+      ssn: '',
+    };
+
+    const template: Template = {
+      $schema: '',
+      name: '',
+      version: '0.0.1',
+      elementSeparator: '*',
+      segmentSeparator: '~',
+      componentSeparator: '::',
+      repetitionSeparator: '!!',
+      rules: [
+        {
+          name: 'segment_one',
+          container: false,
+          children: [],
+          elements: [
+            {
+              name: 'dash',
+              value: `{{ssnFormat 'dash' [ssn]}}`,
+            },
+            {
+              name: 'nodash',
+              value: `{{ssnFormat 'nodash' [ssn]}}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const want = '*~';
+    const got = await serialize(template, input);
 
     assert.deepEqual(got, want);
   });

@@ -1,13 +1,8 @@
-import Handlebars from 'handlebars';
 import * as xml from 'xmlbuilder2';
-import * as dateFns from 'date-fns';
-import { UTCDate } from '@date-fns/utc';
-import jp from 'jsonpath';
 import { PassThrough, Readable, Writable } from 'stream';
-import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule, XMLTemplate, X12Template, XMLRule, XMLSource, XMLDateSource, XMLNumberSource, XMLLength } from './types.js';
+import type { ElementRule, Template, Repetition, Serializer, SegmentRule, CloseSegmentRule, XMLTemplate, X12Template, XMLRule, XMLLength, XMLSimpleRule, XMLComplexRule } from './types.js';
 import * as util from './util.js';
 import { XMLBuilderCB, XMLBuilderCBCreateOptions } from 'xmlbuilder2/lib/interfaces.js';
-import { AssertionError } from 'assert';
 
 type FilterFunction = (input: unknown) => string;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,6 +39,8 @@ export class XMLSerializer_0_0_1 implements Serializer {
   template: XMLTemplate | undefined;
 
   constructor() {
+    util.setupLogger();
+    util.registerHelpers();
   }
 
   public serialize(stream: PassThrough, today: string, input: Record<string, unknown>, template: Template): Promise<Readable> {
@@ -80,39 +77,64 @@ export class XMLSerializer_0_0_1 implements Serializer {
   }
 
   private createElement(config: XMLRule, root: XMLBuilderCB, context: Record<string, unknown>, today: string): XMLBuilderCB {
-    if (typeof context === 'object') {
-      context.__TODAY = today;
-    }
 
-    const children = config.children || [];
-    let text: string | undefined;
+    if (config.repetition) {
+      const repetition: Repetition = config.repetition;
+      const repetitionObject = context[repetition.property];
+      const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;
 
-    if ('source' in config && config.source) {
-      text = this.expandSource(config.source, context);
-    } else if ('text' in config && config.text) {
-      text = config.text;
-    }
+      const filterExpression = filterFactory(repetition.filter);
+      const parentInput = repetitionObject !== undefined ? context : undefined;
 
-    if (config.required || text) {
-      const element = root.ele(config.name, config.attributes);
-
-      if (text) {
-        text = this.expandLength(text, config.length);
-        element.txt(text);
-      }
-
-      if (config.context) {
-        const contexts = jp.query(context, config.context);
-        for (const context of contexts) {
-          this.expandChildren(children, element, context, today);
+      for (let i = 0; i < repetitionCount; ++i) {
+        const ctx = Array.isArray(repetitionObject) ? repetitionObject[i] : undefined;
+        if (ctx !== undefined && typeof ctx === 'object') {
+          ctx._PARENT = parentInput;
         }
-      } else {
-        this.expandChildren(children, element, context, today);
+
+        if (filterExpression(ctx) === '') { continue; };
+
+        if (config.children) {
+          this.createComplexElement(config, root, ctx, today);
+        } else {
+          this.createSimpleElement(config, root, ctx);
+        }
       }
-      element.up();
+    } else if (config.ignore) {
+      const filterExpression = filterFactory(config.ignore);
+
+      if (filterExpression(context) !== '') {
+        if (config.children) {
+          this.createComplexElement(config, root, context, today);
+        } else {
+          this.createSimpleElement(config, root, context);
+        }
+      }
+    } else {
+      if (config.children) {
+        this.createComplexElement(config, root, context, today);
+      } else {
+        this.createSimpleElement(config, root, context);
+      }
+    }
+    return root;
+  }
+
+  private createSimpleElement(config: XMLSimpleRule, root: XMLBuilderCB, context: Record<string, unknown>): void {
+    const compile = util.compileTemplate(config.value);
+    const text = compile(context);
+
+    if (!config.required && !text) {
+      return;
     }
 
-    return root;
+    root.ele(config.name, config.attributes).txt(this.expandLength(text, config.length)).up();
+  }
+
+  private createComplexElement(config: XMLComplexRule, root: XMLBuilderCB, context: Record<string, unknown>, today: string): void {
+    const element = root.ele(config.name, config.attributes);
+    this.expandChildren(config.children, element, context, today);
+    element.up();
   }
 
   private expandLength(text: string, lengthConfig: XMLLength | undefined): string {
@@ -143,79 +165,6 @@ export class XMLSerializer_0_0_1 implements Serializer {
     for (const child of children) {
       this.createElement(child, element, context, today);
     }
-  }
-
-  private expandSource(source: XMLSource, context: Record<string, unknown>): string | undefined {
-    if (typeof source === 'object') {
-      switch (source.kind) {
-        case 'date':
-          return this.sourceDate(source, context);
-        case 'number':
-          return this.sourceNumber(source, context);
-        default:
-          throw new Error(`unknown source kind '${JSON.stringify(source)}'`);
-      }
-    }
-
-    const text = jp.value(context, source);
-    if (text === undefined) {
-      return undefined;
-    }
-
-    return text.toString();
-  }
-
-  private sourceDate(source: XMLDateSource, context: Record<string, unknown>): string {
-    let d;
-    try {
-      if (!source.input) {
-        throw new AssertionError({ message: 'input cannot be undefined in date source' });
-      }
-      d = this.parseDate(jp.value(context, source.input), source.inFormat);
-    } catch (err) {
-      if (err instanceof AssertionError) {
-        d = this.parseDate(source.input, source.inFormat);
-      } else {
-        throw err;
-      }
-    }
-
-    return dateFns.format(d, source.outFormat);
-  }
-
-  private parseDate(input: string | undefined, format: string | undefined): UTCDate {
-    const now = new UTCDate();
-
-    if (input === undefined || typeof input !== 'string') {
-      return now;
-    }
-
-    if (format === undefined || typeof input !== 'string') {
-      return new UTCDate(input);
-    }
-
-    return dateFns.parse(input, format, now);
-  }
-
-  private sourceNumber(source: XMLNumberSource, context: Record<string, unknown>): string {
-    let d: string;
-    try {
-      d = jp.value(context, source.input);
-    } catch (err) {
-      if (err instanceof AssertionError) {
-        d = source.input;
-      } else {
-        throw err;
-      }
-    }
-
-    if (d === undefined) {
-      d = '0';
-    }
-
-    d = Number(d).toFixed(source.precision);
-
-    return source.dot ? d : d.replaceAll('.', '');
   }
 
   private isValidTemplate(template: Template): template is XMLTemplate {
@@ -266,7 +215,7 @@ export class Serializer_0_0_1 implements Serializer {
           const repetitionObject = input[repetition.property];
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
-          const filterExpression = this.filterFactory(repetition.filter);
+          const filterExpression = filterFactory(repetition.filter);
           const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
@@ -286,7 +235,7 @@ export class Serializer_0_0_1 implements Serializer {
           }
         } else if (segment.filter) {
           const filter = segment.filter;
-          const filterExpression = this.filterFactory(filter.expression);
+          const filterExpression = filterFactory(filter.expression);
           const originalFilterObject = input[filter.property];
           let filteredObject = originalFilterObject;
           const parentInput = originalFilterObject !== undefined ? input : undefined;
@@ -310,7 +259,7 @@ export class Serializer_0_0_1 implements Serializer {
           }
           input[filter.property] = originalFilterObject;
         } else if (segment.ignore) {
-          const filterExpression = this.filterFactory(segment.ignore);
+          const filterExpression = filterFactory(segment.ignore);
 
           if (filterExpression(input) !== '') {
             if (segment.container) {
@@ -346,14 +295,20 @@ export class Serializer_0_0_1 implements Serializer {
     }
 
     return (): void => {
-      const segmentCount = this.countSegments(segments, today, input, stream);
+      // countSegments walks the entire subtree, and _serializeSegments runs at every
+      // recursion level and every repetition iteration. The count is only ever consumed
+      // as `_segment_count` (the SE trailer), so only pay for it on levels that actually
+      // reference it — otherwise it is recomputed redundantly for every employee/plan.
+      const segmentCount = this.levelReferencesSegmentCount(segments)
+        ? this.countSegments(segments, today, input, stream)
+        : 0;
       for (const segment of segments) {
         if (segment.repetition) {
           const repetition: Repetition = segment.repetition;
           const repetitionObject = input[repetition.property];
           const repetitionCount = Array.isArray(repetitionObject) ? repetitionObject.length : 1;// Note the serialization should take place even if the input is undefined
 
-          const filterExpression = this.filterFactory(repetition.filter);
+          const filterExpression = filterFactory(repetition.filter);
           const parentInput = repetitionObject !== undefined ? input : undefined;
 
           for (let i = 0; i < repetitionCount; ++i) {
@@ -374,7 +329,7 @@ export class Serializer_0_0_1 implements Serializer {
           }
         } else if (segment.filter) {
           const filter = segment.filter;
-          const filterExpression = this.filterFactory(filter.expression);
+          const filterExpression = filterFactory(filter.expression);
           const originalFilterObject = input[filter.property];
           let filteredObject = originalFilterObject;
           const parentInput = originalFilterObject !== undefined ? input : undefined;
@@ -399,7 +354,7 @@ export class Serializer_0_0_1 implements Serializer {
           }
           input[filter.property] = originalFilterObject;
         } else if (segment.ignore) {
-          const filterExpression = this.filterFactory(segment.ignore);
+          const filterExpression = filterFactory(segment.ignore);
 
           if (filterExpression(input) !== '') {
             if (segment.container) {
@@ -425,6 +380,31 @@ export class Serializer_0_0_1 implements Serializer {
 
   private serializeSegments = this.trampoline<void>(this._serializeSegments);
 
+  private segmentCountUsageCache = new WeakMap<SegmentRule[], boolean>();
+
+  // A level needs its segment count computed only if one of its own segments (or their
+  // close rules) interpolates `_segment_count`. The rule tree is static, so the answer is
+  // cached by the segments-array reference — which is stable across every repetition pass.
+  private levelReferencesSegmentCount(segments: SegmentRule[]): boolean {
+    const cached = this.segmentCountUsageCache.get(segments);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const referencesSegmentCount = (elements: ElementRule[] | undefined): boolean =>
+      elements?.some((element) => element.value.includes('_segment_count')) ?? false;
+
+    const result = segments.some((segment) => {
+      if (segment.container) {
+        return false;
+      }
+      return referencesSegmentCount(segment.elements) || referencesSegmentCount(segment.closeRule?.elements);
+    });
+
+    this.segmentCountUsageCache.set(segments, result);
+    return result;
+  }
+
   private serializeCloseRule(closeRule: CloseSegmentRule | undefined, input: Record<string, unknown>, segmentCount: number, stream: Writable): void {
     if (!closeRule) {
       return;
@@ -440,7 +420,7 @@ export class Serializer_0_0_1 implements Serializer {
     }
 
     elementRules.forEach((element) => {
-      const compile = Handlebars.compile(element.value);
+      const compile = util.compileTemplate(element.value);
       const output = util.postCompileAttributes(element.attributes, compile(input), input);
       elements.push(output);
     });
@@ -480,18 +460,6 @@ export class Serializer_0_0_1 implements Serializer {
     }
   }
 
-  private filterFactory(filterExpression?: string): FilterFunction {
-    if (!filterExpression) {
-      return NoOpFilter;
-    }
-
-    const compile = Handlebars.compile(filterExpression);
-
-    return (input: unknown) => {
-      return compile(input);
-    };
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private trampoline<K>(fn: TrampolineFunction<K>): (...args: any[]) => K {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -506,3 +474,16 @@ export class Serializer_0_0_1 implements Serializer {
     };
   }
 }
+
+function filterFactory(filterExpression?: string): FilterFunction {
+  if (!filterExpression) {
+    return NoOpFilter;
+  }
+
+  const compile = util.compileTemplate(filterExpression);
+
+  return (input: unknown) => {
+    return compile(input);
+  };
+}
+

@@ -3,6 +3,22 @@ import { ElementRuleAttribute, LengthAttribute } from './types.js';
 import * as dateFns from 'date-fns';
 import { UTCDate } from '@date-fns/utc';
 
+// Template strings in a rule set are static, but serialization evaluates each one
+// once per record (per employee, per benefit plan, ...). Compiling a Handlebars
+// template is far more expensive than executing an already-compiled one, so cache
+// the compiled delegate keyed by its source. Helpers are registered globally and
+// once, so a given source always compiles to the same delegate.
+const compiledTemplateCache = new Map<string, Handlebars.TemplateDelegate>();
+
+export function compileTemplate(source: string): Handlebars.TemplateDelegate {
+  let compiled = compiledTemplateCache.get(source);
+  if (!compiled) {
+    compiled = Handlebars.compile(source);
+    compiledTemplateCache.set(source, compiled);
+  }
+  return compiled;
+}
+
 export function postCompileAttributes(attrs: ElementRuleAttribute | undefined, input: string, compileInput: Record<string, unknown>): string {
   if (!attrs) {
     return input;
@@ -28,7 +44,7 @@ export function lengthAttribute(input: string, attr: LengthAttribute, quoted: bo
   // Setup Padding with a default of ' '
   let padding;
   if (attr.padding) {
-    const paddingCompiler = Handlebars.compile(attr.padding);
+    const paddingCompiler = compileTemplate(attr.padding);
     padding = paddingCompiler(compileInput);
   }
   if (padding === '') {
@@ -180,7 +196,15 @@ export function registerHelpers(): void {
   });
 
   Handlebars.registerHelper('ssnFormat', function (key: string, ssn?: string): string {
+    if (!isSSNFormatKey(key)) {
+      throw new Error(`invalid ssn format key '${key}'`);
+    };
+
     if (typeof ssn !== 'string') {
+      return '';
+    }
+
+    if (ssn.length === 0) {
       return '';
     }
 
@@ -190,8 +214,6 @@ export function registerHelpers(): void {
         return `${first}-${second}-${third}`;
       case 'nodash':
         return `${first}${second}${third}`;
-      default:
-        throw new Error(`invalid ssn format key '${key}'`);
     }
   });
 
@@ -568,4 +590,10 @@ export function getValidNumberOrZero(a: unknown): number {
   } else {
     return testNum;
   }
+}
+
+type SSNFormatKey = 'dash' | 'nodash';
+
+function isSSNFormatKey(key: string): key is SSNFormatKey {
+  return (key === 'dash' || key === 'nodash');
 }

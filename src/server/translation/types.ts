@@ -14,46 +14,27 @@ export type XMLDocument = {
   root: XMLRule;
 }
 
-export type XMLRule = XMLTextRule | XMLSourceRule;
+export type XMLRule = XMLSimpleRule | XMLComplexRule;
 
 type XMLBaseRule = {
   name: string;
   required?: boolean;
   attributes?: Record<string, string>
-  context?: string;
-  children?: XMLRule[];
+  repetition?: Repetition;
+  ignore?: string;
   length?: XMLLength;
 }
 
-export type XMLTextRule = XMLBaseRule & {
-  text?: string;
-}
+export type XMLSimpleRule =
+  | XMLBaseRule & { value: string, children?: never }
 
-export type XMLSourceRule = XMLBaseRule & {
-  source?: XMLSource;
-}
+export type XMLComplexRule = XMLBaseRule & { children: XMLRule[], value?: never };
 
 export type XMLLength = {
   min: number;
   max: number;
   padding: string;
   align: 'left' | 'right';
-}
-
-export type XMLSource = string | XMLDateSource | XMLNumberSource;
-
-export type XMLDateSource = {
-  kind: 'date',
-  input?: string;
-  inFormat?: string;
-  outFormat: string;
-}
-
-export type XMLNumberSource = {
-  kind: 'number';
-  input: string;
-  dot: boolean;
-  precision: number;
 }
 
 export type X12Template = {
